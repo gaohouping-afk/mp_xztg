@@ -27,7 +27,9 @@ Page({
     isEdit: false,
     loading: false,
     avatarCloudPath: '',
-    avatarToDelete: ''
+    avatarToDelete: '',
+    hasGrave: false,
+    graveCount: 0
   },
 
   onLoad(options) {
@@ -120,6 +122,7 @@ Page({
     }
     this.setData(updateData)
     this.loadAllMembersFromCache(data._id, updateData.gender)
+    this.checkGrave(data._id)
   },
 
   loadAllMembersFromCache(currentId, currentGender) {
@@ -214,6 +217,7 @@ Page({
         }
         this.setData(updateData)
         await this.loadAllMembers(id, updateData.gender)
+        this.checkGrave(id)
       } else {
         await this.loadAllMembers()
       }
@@ -615,5 +619,41 @@ Page({
       })
       await this.updateDescendantsGeneration(db, child._id, parentGeneration + 1)
     }
+  },
+
+  async checkGrave(memberId) {
+    if (!memberId) return
+
+    try {
+      const db = wx.cloud.database()
+      const { data } = await db.collection('graves')
+        .where({ memberId: memberId })
+        .get()
+
+      this.setData({
+        hasGrave: data && data.length > 0,
+        graveCount: data ? data.length : 0
+      })
+    } catch (e) {
+      console.error('checkGrave error:', e)
+    }
+  },
+
+  onGraveTap() {
+    const { id, hasGrave, graveCount } = this.data
+
+    if (hasGrave) {
+      wx.navigateTo({
+        url: `/pages/grave/grave?memberId=${id}`
+      })
+    } else {
+      wx.navigateTo({
+        url: `/pages/graveEdit/graveEdit?memberId=${id}`
+      })
+    }
+  },
+
+  preventScroll() {
+    return false
   }
 })

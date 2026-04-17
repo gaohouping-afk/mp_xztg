@@ -21,6 +21,11 @@
       <text class="menu-text">迁徙故事</text>
       <text class="menu-desc">家族迁徙历史</text>
     </view>
+    <view class="menu-item" bindtap="goToGrave">
+      <view class="menu-icon">墓</view>
+      <text class="menu-text">墓碑纪念</text>
+      <text class="menu-desc">管理墓碑信息</text>
+    </view>
   </view>
 
   <view class="init-section">

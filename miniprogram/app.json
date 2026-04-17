@@ -8,6 +8,9 @@
     "pages/story/story",
     "pages/storyDetail/storyDetail",
     "pages/storyEdit/storyEdit",
+    "pages/grave/grave",
+    "pages/graveDetail/graveDetail",
+    "pages/graveEdit/graveEdit",
     "pages/about/about"
   ],
   "window": {

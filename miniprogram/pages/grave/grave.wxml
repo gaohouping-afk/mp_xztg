@@ -1,0 +1,98 @@
+<view class="page-container">
+  <view class="search-bar" wx:if="{{!memberId}}">
+    <input
+      class="search-input"
+      placeholder="搜索成员姓名"
+      bindinput="onSearch"
+    />
+    <view class="filter-btns">
+      <view
+        class="filter-btn {{!filterType ? 'active' : ''}}"
+        bindtap="onFilterType"
+        data-type=""
+      >全部</view>
+      <view
+        class="filter-btn {{filterType === 'ancestor' ? 'active' : ''}}"
+        bindtap="onFilterType"
+        data-type="ancestor"
+      >祖先墓</view>
+      <view
+        class="filter-btn {{filterType === 'clothing' ? 'active' : ''}}"
+        bindtap="onFilterType"
+        data-type="clothing"
+      >衣冠冢</view>
+      <view
+        class="filter-btn {{filterType === 'memorial' ? 'active' : ''}}"
+        bindtap="onFilterType"
+        data-type="memorial"
+      >纪念碑</view>
+    </view>
+  </view>
+
+  <view class="member-header" wx:if="{{memberId && memberName}}">
+    <text class="member-name">{{memberName}}</text>
+    <text class="member-desc">的墓碑纪念</text>
+  </view>
+
+  <scroll-view
+    class="grave-list"
+    scroll-y="{{true}}"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+    bindscrolltolower="onReachBottom"
+    wx:if="{{!loading || displayGraves.length > 0}}"
+  >
+    <view
+      class="grave-item"
+      wx:for="{{displayGraves}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="onGraveTap"
+    >
+      <view class="grave-icon" style="background-color: {{item.typeColor}}">
+        <text class="icon-text">墓</text>
+      </view>
+      <view class="grave-info">
+        <view class="grave-header">
+          <text class="grave-name">{{item.memberName}}</text>
+          <text class="grave-type" style="color: {{item.typeColor}}">{{item.typeLabel}}</text>
+        </view>
+        <view class="grave-detail" wx:if="{{item.location}}">
+          <text class="detail-icon">📍</text>
+          <text>{{item.location}}</text>
+        </view>
+        <view class="grave-detail" wx:if="{{item.visitDate}}">
+          <text class="detail-icon">📅</text>
+          <text>上次扫墓: {{item.visitDate}}</text>
+        </view>
+        <view class="grave-detail" wx:if="{{item.visitCount}}">
+          <text class="detail-icon">🕯️</text>
+          <text>扫墓 {{item.visitCount}} 次</text>
+        </view>
+      </view>
+      <view class="grave-arrow">›</view>
+    </view>
+
+    <view class="load-more" wx:if="{{loading && displayGraves.length > 0}}">
+      <text>加载中...</text>
+    </view>
+
+    <view class="no-more" wx:if="{{!hasMore && displayGraves.length > 0}}">
+      <text>已加载全部 {{displayGraves.length}} 条数据</text>
+    </view>
+
+    <view class="empty" wx:if="{{displayGraves.length === 0 && !loading}}">
+      <view class="empty-icon">🪦</view>
+      <text class="empty-text">暂无墓碑记录</text>
+      <text class="empty-hint">点击下方按钮添加墓碑纪念</text>
+    </view>
+  </scroll-view>
+
+  <view class="loading" wx:if="{{loading && displayGraves.length === 0}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="add-btn" bindtap="onAddGrave">
+    <text>+</text>
+  </view>
+</view>

@@ -1,4 +1,4 @@
-<view class="page-container">
+<view class="page-container" catchtouchmove="{{showSpouseModal ? 'preventScroll' : ''}}">
   <wxs module="utils">
     module.exports = {
       includes: function(array, value) {
@@ -144,6 +144,17 @@
         bindinput="onBioInput"
       />
     </view>
+  </view>
+
+  <view class="grave-section" wx:if="{{isEdit}}" bindtap="onGraveTap">
+    <view class="grave-icon">
+      <text>🪦</text>
+    </view>
+    <view class="grave-info">
+      <text class="grave-text">{{hasGrave ? '查看墓碑纪念' : '添加墓碑纪念'}}</text>
+      <text class="grave-hint" wx:if="{{hasGrave}}">已关联 {{graveCount}} 个墓碑</text>
+    </view>
+    <text class="grave-arrow">›</text>
   </view>
 
   <view class="save-btn" bindtap="onSave">

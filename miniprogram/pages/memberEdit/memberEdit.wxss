@@ -241,3 +241,48 @@
   color: #8B4513;
   font-weight: 500;
 }
+
+.grave-section {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  margin: 20rpx;
+  padding: 28rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.grave-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: #F5E6D3;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  font-size: 36rpx;
+}
+
+.grave-info {
+  flex: 1;
+}
+
+.grave-text {
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: 500;
+  display: block;
+}
+
+.grave-hint {
+  font-size: 24rpx;
+  color: #999999;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.grave-arrow {
+  font-size: 36rpx;
+  color: #CCCCCC;
+}

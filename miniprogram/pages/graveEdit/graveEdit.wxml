@@ -1,0 +1,137 @@
+<view class="page-container" disable-scroll="{{showMemberModal}}" catchtouchmove="preventScroll">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">关联成员 *</text>
+      <view class="member-picker" bindtap="showMemberPicker">
+        <text class="picker-text {{selectedMember ? '' : 'placeholder'}}">
+          {{selectedMember ? selectedMember.name : '请选择成员'}}
+        </text>
+        <text class="arrow">▼</text>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">墓碑类型 *</text>
+      <view class="type-picker">
+        <view
+          class="type-option {{graveType === item.value ? 'active' : ''}}"
+          wx:for="{{graveTypes}}"
+          wx:key="value"
+          bindtap="onTypeSelect"
+          data-value="{{item.value}}"
+          style="--type-color: {{item.color}}"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">墓址位置</text>
+      <view class="location-input">
+        <input
+          class="input"
+          value="{{location}}"
+          placeholder="请输入墓碑位置描述"
+          bindinput="onLocationInput"
+        />
+        <view class="location-btn" bindtap="onChooseLocation">
+          <text>📍</text>
+        </view>
+      </view>
+      <view class="location-coords" wx:if="{{latitude && longitude}}">
+        <text>已定位: {{latitude}}, {{longitude}}</text>
+      </view>
+      <view class="coords-input">
+        <input
+          class="coord-input"
+          type="digit"
+          value="{{latitude}}"
+          placeholder="纬度"
+          bindinput="onLatitudeInput"
+        />
+        <text class="coord-sep">,</text>
+        <input
+          class="coord-input"
+          type="digit"
+          value="{{longitude}}"
+          placeholder="经度"
+          bindinput="onLongitudeInput"
+        />
+        <text class="coord-hint">手动输入坐标</text>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">墓碑描述</text>
+      <textarea
+        class="textarea"
+        value="{{description}}"
+        placeholder="请输入墓碑描述、碑文等信息"
+        bindinput="onDescriptionInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">墓碑照片 (最多9张)</text>
+      <view class="photo-container">
+        <view class="photo-grid">
+          <view
+            class="photo-item"
+            wx:for="{{photos}}"
+            wx:key="index"
+          >
+            <image src="{{item}}" mode="aspectFill" bindtap="onPreviewPhoto" data-index="{{index}}" />
+            <view class="photo-delete" bindtap="onDeletePhoto" data-index="{{index}}">×</view>
+          </view>
+          <view class="photo-add" bindtap="onAddPhoto" wx:if="{{photos.length < 9}}">
+            <text>+</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="save-btn {{loading ? 'loading' : ''}} {{showMemberModal ? 'hidden' : ''}}" bindtap="onSave">
+    <text>{{loading ? '保存中...' : '保存'}}</text>
+  </view>
+
+  <view class="mask" wx:if="{{showMemberModal}}" bindtap="hideMemberPicker"></view>
+  <view class="member-modal" wx:if="{{showMemberModal}}">
+    <view class="modal-header">
+      <text>选择成员</text>
+      <text class="close-btn" bindtap="hideMemberPicker">×</text>
+    </view>
+    <view class="search-box">
+      <input
+        class="search-input"
+        value="{{searchKey}}"
+        placeholder="搜索成员姓名"
+        bindinput="onMemberSearch"
+      />
+    </view>
+    <scroll-view scroll-y class="modal-content" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view
+        class="member-option {{selectedMemberId === item._id ? 'selected' : ''}}"
+        wx:for="{{filteredMembers}}"
+        wx:key="_id"
+        bindtap="onMemberSelect"
+        data-id="{{item._id}}"
+        data-name="{{item.name}}"
+      >
+        <view class="member-avatar">
+          <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" />
+          <text wx:else>{{item.name[0]}}</text>
+        </view>
+        <view class="member-info">
+          <text class="member-name">{{item.name}}</text>
+          <text class="member-meta">第{{item.generation}}代 · {{item.gender}}</text>
+        </view>
+        <view class="check-icon" wx:if="{{selectedMemberId === item._id}}">✓</view>
+      </view>
+      <view class="empty-hint" wx:if="{{filteredMembers.length === 0}}">
+        <text>暂无匹配成员</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

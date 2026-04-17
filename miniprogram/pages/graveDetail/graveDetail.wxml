@@ -1,0 +1,198 @@
+<view class="page-container" wx:if="{{grave}}">
+  <view class="header-card">
+    <view class="header-main">
+      <view class="avatar-wrap">
+        <image wx:if="{{member.avatar}}" class="avatar-img" src="{{member.avatar}}" mode="aspectFill" />
+        <view wx:else class="avatar-placeholder">{{grave.memberName[0]}}</view>
+        <view class="avatar-badge" style="background: {{grave.typeColor}}">
+          <text class="avatar-badge-text">{{grave.typeLabel}}</text>
+        </view>
+      </view>
+      <view class="header-content">
+        <view class="header-top-row">
+          <view class="title-group">
+            <text class="grave-name">{{grave.memberName}}</text>
+            <view class="meta-tags">
+              <text class="meta-tag" wx:if="{{member}}">{{member.gender}}</text>
+              <text class="meta-tag" wx:if="{{member}}">第{{member.generation}}代</text>
+              <text class="meta-tag accent" style="color: {{grave.typeColor}}" wx:if="{{grave.location}}">{{grave.location}}</text>
+            </view>
+          </view>
+          <view class="more-btn" bindtap="onMoreTap">
+            <text class="more-icon">⋯</text>
+          </view>
+        </view>
+        <view class="header-desc" wx:if="{{grave.description}}">
+          <text class="desc-text">{{grave.description}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="header-footer" wx:if="{{member}}" bindtap="onViewMember">
+      <view class="member-info-row">
+        <view class="mini-avatar">
+          <image wx:if="{{member.avatar}}" src="{{member.avatar}}" mode="aspectFill" />
+          <text wx:else>{{member.name[0]}}</text>
+        </view>
+        <view class="member-text">
+          <text class="member-name-small">{{member.name}}</text>
+          <text class="view-member-hint">点击查看成员详情</text>
+        </view>
+      </view>
+      <text class="arrow-icon">›</text>
+    </view>
+  </view>
+
+  <view class="info-card">
+    <view class="card-title">
+      <text class="card-title-icon">📍</text>
+      <text>位置信息</text>
+    </view>
+    <view class="card-body">
+      <view class="location-row" wx:if="{{grave.location}}">
+        <text class="location-text">{{grave.location}}</text>
+      </view>
+      <view class="coords-row" wx:if="{{grave.latitude && grave.longitude}}">
+        <view class="coords-box">
+          <text class="coords-label">GPS坐标</text>
+          <text class="coords-value">{{grave.latitude}}, {{grave.longitude}}</text>
+        </view>
+        <view class="coords-actions">
+          <view class="icon-btn" bindtap="onCopyCoords">
+            <text>复制</text>
+          </view>
+          <view class="icon-btn primary" bindtap="onNavigate">
+            <text>导航</text>
+          </view>
+        </view>
+      </view>
+      <view class="empty-tip" wx:if="{{!grave.location && !grave.latitude}}">
+        <text>暂无位置信息</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="info-card" wx:if="{{grave.description}}">
+    <view class="card-title">
+      <text class="card-title-icon">📝</text>
+      <text>墓碑描述</text>
+    </view>
+    <view class="card-body">
+      <text class="description-text">{{grave.description}}</text>
+    </view>
+  </view>
+
+  <view class="info-card" wx:if="{{grave.photos && grave.photos.length > 0}}">
+    <view class="card-title">
+      <text class="card-title-icon">📷</text>
+      <text>墓碑照片</text>
+      <text class="photo-count">{{grave.photos.length}}张</text>
+    </view>
+    <view class="card-body">
+      <scroll-view scroll-x class="photo-scroll">
+        <view class="photo-list">
+          <view
+            class="photo-item"
+            wx:for="{{grave.photos}}"
+            wx:key="index"
+            bindtap="onPreviewPhoto"
+            data-index="{{index}}"
+          >
+            <image src="{{item}}" mode="aspectFill" />
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="info-card">
+    <view class="card-title">
+      <text class="card-title-icon">🕯️</text>
+      <text>扫墓记录</text>
+    </view>
+    <view class="card-body">
+      <view class="stats-grid">
+        <view class="stat-card">
+          <text class="stat-number">{{grave.visitCount || 0}}</text>
+          <text class="stat-label">累计扫墓</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-card">
+          <text class="stat-date">{{grave.visitDate || '--'}}</text>
+          <text class="stat-time" wx:if="{{grave.visitTime}}">{{grave.visitTime}}</text>
+          <text class="stat-label" wx:else>上次扫墓</text>
+        </view>
+      </view>
+      <view class="action-bar">
+        <view class="action-btn primary" bindtap="onRecordVisit">
+          <text>记录扫墓</text>
+        </view>
+        <view class="action-btn" wx:if="{{grave.visitDate}}" bindtap="onEditVisit">
+          <text>编辑记录</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="action-sheet" wx:if="{{showMoreSheet}}">
+    <view class="sheet-mask" bindtap="onCloseSheet"></view>
+    <view class="sheet-card">
+      <view class="sheet-item" bindtap="onEdit">
+        <text class="sheet-icon">✏️</text>
+        <text>编辑墓碑信息</text>
+      </view>
+      <view class="sheet-item danger" bindtap="onDelete">
+        <text class="sheet-icon">🗑️</text>
+        <text>删除墓碑</text>
+      </view>
+    </view>
+    <view class="sheet-cancel" bindtap="onCloseSheet">取消</view>
+  </view>
+
+  <view class="visit-modal" wx:if="{{showVisitModal}}">
+    <view class="modal-mask" bindtap="onCancelEditVisit"></view>
+    <view class="modal-card">
+      <view class="modal-header">
+        <text>编辑扫墓记录</text>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <text class="form-label">累计次数</text>
+          <input
+            class="form-input"
+            type="number"
+            value="{{editVisitCount}}"
+            bindinput="onCountChange"
+            placeholder="请输入次数"
+          />
+        </view>
+        <view class="form-item">
+          <text class="form-label">扫墓日期</text>
+          <picker mode="date" value="{{editVisitDate}}" bindchange="onDateChange">
+            <view class="picker-view">
+              <text>{{editVisitDate}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+        <view class="form-item">
+          <text class="form-label">扫墓时间</text>
+          <picker mode="time" value="{{editVisitTime}}" bindchange="onTimeChange">
+            <view class="picker-view">
+              <text>{{editVisitTime}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <view class="modal-btn cancel" bindtap="onCancelEditVisit">取消</view>
+        <view class="modal-btn confirm" bindtap="onSaveVisit">保存</view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="loading-view" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>

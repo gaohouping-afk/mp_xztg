@@ -43,6 +43,10 @@ Page({
     wx.navigateTo({ url: '/pages/story/story' })
   },
 
+  goToGrave() {
+    wx.navigateTo({ url: '/pages/grave/grave' })
+  },
+
   goToAbout() {
     wx.navigateTo({ url: '/pages/about/about' })
   },
