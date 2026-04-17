@@ -1,0 +1,243 @@
+.page-container {
+  min-height: 100vh;
+  background-color: #F5F5F5;
+  padding-bottom: 120rpx;
+}
+
+.form-section {
+  background: #FFFFFF;
+  padding: 32rpx;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #E5E5E5;
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  width: 140rpx;
+  font-size: 28rpx;
+  color: #333333;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+  padding: 8rpx 0;
+}
+
+.display-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #8B4513;
+  font-weight: bold;
+  padding: 8rpx 0;
+}
+
+.radio-group {
+  display: flex;
+  gap: 32rpx;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.picker {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+  padding: 8rpx 0;
+}
+
+.avatar-picker {
+  width: 120rpx;
+  height: 120rpx;
+  border: 2rpx dashed #D2B48C;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: #FFFEF5;
+}
+
+.avatar-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+.avatar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.avatar-action-btn {
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  border-radius: 6rpx;
+}
+
+.avatar-action-btn.preview {
+  background-color: #8B4513;
+  color: #fff;
+}
+
+.avatar-action-btn.delete {
+  background-color: #fff;
+  color: #999;
+  border: 2rpx solid #E5E5E5;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-placeholder {
+  color: #D2B48C;
+  font-size: 48rpx;
+}
+
+.textarea {
+  flex: 1;
+  min-height: 120rpx;
+  font-size: 28rpx;
+  color: #333333;
+  padding: 16rpx 0;
+}
+
+.save-btn {
+  position: fixed;
+  left: 32rpx;
+  right: 32rpx;
+  bottom: 32rpx;
+  height: 88rpx;
+  background: #8B4513;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(139, 69, 19, 0.3);
+}
+
+.save-btn text {
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.spouse-picker {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 28rpx;
+  color: #333333;
+  padding: 8rpx 0;
+}
+
+.spouse-picker .arrow {
+  color: #999;
+  font-size: 24rpx;
+}
+
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+.spouse-modal {
+  position: fixed;
+  left: 32rpx;
+  right: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  z-index: 100;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #E5E5E5;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.close-btn {
+  font-size: 40rpx;
+  color: #999;
+}
+
+.modal-content {
+  flex: 1;
+  max-height: 400rpx;
+  padding: 16rpx 32rpx;
+}
+
+.spouse-option {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.spouse-option:last-child {
+  border-bottom: none;
+}
+
+.spouse-option checkbox {
+  margin-right: 16rpx;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #E5E5E5;
+}
+
+.cancel-btn, .confirm-btn {
+  flex: 1;
+  text-align: center;
+  padding: 28rpx;
+  font-size: 30rpx;
+}
+
+.cancel-btn {
+  color: #666;
+  border-right: 1rpx solid #E5E5E5;
+}
+
+.confirm-btn {
+  color: #8B4513;
+  font-weight: 500;
+}

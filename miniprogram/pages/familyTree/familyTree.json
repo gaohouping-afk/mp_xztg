@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "family-tree": "/components/familyTree/familyTree"
+  },
+  "navigationBarTitleText": "家族族谱",
+  "enablePullDownRefresh": true
+}

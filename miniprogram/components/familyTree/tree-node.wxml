@@ -1,0 +1,118 @@
+<wxs module="utils">
+function toChinese(num) {
+  if (!num) return '一';
+  var cn = '零一二三四五六七八九';
+  if (typeof num === 'number') {
+    num = num.toString();
+  }
+  var result = '';
+  for (var i = 0; i < num.length; i++) {
+    result += cn[num.charAt(i)] || num.charAt(i);
+  }
+  return result;
+}
+
+module.exports = {
+  toChinese: toChinese
+};
+</wxs>
+
+<view class="tree-container">
+  <view class="user-super-container">
+    <view class="user-sons-container" style="padding-left: {{itemMargin}}; padding-right: {{itemMargin}}">
+      <view class="user-container">
+        <view wx:if="{{!isRoot}}" class="root-line" style="background-color: {{verticalLineColor}}"></view>
+        <view class="user-info-group">
+          <view class="user-info" data-id="{{dataSource._id}}" id="node-{{dataSource._id}}" bindtap="onItemTap">
+            <view class="user-card">
+              <view class="user-card-line-1"></view>
+              <view class="user-card-line-2"></view>
+              
+              <view class="card-column card-col-left">
+                <view class="card-dot-top"></view>
+                <view class="card-text-vertical">{{dataSource.rankTitle || '成员'}}</view>
+              </view>
+              
+              <view class="card-column card-col-middle">
+                <view class="card-dot-top"></view>
+                <view class="card-text-vertical card-name">{{dataSource.name || '未命名'}}</view>
+                <view class="card-years" wx:if="{{dataSource.birthYear}}">
+                  {{dataSource.birthYear}}{{dataSource.deathYear ? '-' + dataSource.deathYear : ''}}
+                </view>
+              </view>
+              
+              <view class="card-column card-col-right">
+                <view class="card-dot-top"></view>
+                <view class="card-text-vertical">{{utils.toChinese(generation) || '一'}}世</view>
+                <view class="card-gender {{dataSource.gender === '女' ? 'gender-female' : 'gender-male'}}">
+                  {{dataSource.gender === '女' ? '女' : '男'}}
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <block wx:for="{{spouses}}" wx:key="_id">
+            <view class="spouse-divider"></view>
+            <view class="user-info spouse" data-id="{{item._id}}" id="node-{{item._id}}" bindtap="onItemTap">
+              <view class="user-card">
+                <view class="user-card-line-1"></view>
+                <view class="user-card-line-2"></view>
+                
+                <view class="card-column card-col-left">
+                  <view class="card-dot-top"></view>
+                  <view class="card-text-vertical">{{item.rankTitle || '配偶'}}</view>
+                </view>
+                
+                <view class="card-column card-col-middle">
+                    <view class="card-dot-top"></view>
+                    <view class="card-text-vertical card-name">{{item.name || '未命名'}}</view>
+                    <view class="card-years" wx:if="{{item.birthYear}}">
+                      {{item.birthYear}}{{item.deathYear ? '-' + item.deathYear : ''}}
+                    </view>
+                  </view>
+                
+                <view class="card-column card-col-right">
+                  <view class="card-dot-top"></view>
+                  <view class="card-text-vertical">{{utils.toChinese(generation) || '一'}}世</view>
+                  <view class="card-gender {{item.gender === '女' ? 'gender-female' : 'gender-male'}}">
+                    {{item.gender === '女' ? '女' : '男'}}
+                  </view>
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+        <view wx:if="{{hasChildren}}" class="root-line" style="background-color: {{verticalLineColor}}"></view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{children.length > 0}}" class="children-container">
+    <block wx:for="{{children}}" wx:key="_id">
+      <view class="children-super">
+        <view wx:if="{{index === 0}}" 
+          class="{{children.length > 1 ? 'first-line' : 'first-line none-height'}}"
+          style="background-color: {{horizontalLineColor}}">
+        </view>
+        <view wx:if="{{index === children.length - 1}}" 
+          class="{{children.length > 1 ? 'last-line' : 'last-line none-width'}}"
+          style="background-color: {{horizontalLineColor}}">
+        </view>
+        <view wx:if="{{index !== 0 && index !== children.length - 1}}" 
+          class="item-none"
+          style="background-color: {{horizontalLineColor}}">
+        </view>
+        <tree-node 
+          dataSource="{{item}}"
+          isRoot="{{false}}"
+          members="{{members}}"
+          itemMargin="{{item.itemMargin || itemMargin}}"
+          hasChildren="{{item.hasChildren}}"
+          horizontalLineColor="{{horizontalLineColor}}"
+          verticalLineColor="{{verticalLineColor}}"
+          mut-bind:nodetap="onChildNodeTap"
+        ></tree-node>
+      </view>
+    </block>
+  </view>
+</view>

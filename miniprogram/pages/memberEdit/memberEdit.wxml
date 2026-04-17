@@ -1,0 +1,152 @@
+<view class="page-container">
+  <wxs module="utils">
+    module.exports = {
+      includes: function(array, value) {
+        if (!array || !array.indexOf) return false;
+        return array.indexOf(value) > -1;
+      }
+    }
+  </wxs>
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">姓名 *</text>
+      <input 
+        class="input" 
+        value="{{name}}" 
+        placeholder="请输入姓名"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">身份/称谓</text>
+      <input 
+        class="input" 
+        value="{{rankTitle}}" 
+        placeholder="如: 长子, 次子, 配偶, 养女等"
+        bindinput="onRankTitleInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">性别</text>
+      <radio-group class="radio-group" bindchange="onGenderChange">
+        <label class="radio"><radio value="男" checked="{{gender === '男'}}"/>男</label>
+        <label class="radio"><radio value="女" checked="{{gender === '女'}}"/>女</label>
+      </radio-group>
+    </view>
+
+    <view class="form-item">
+      <text class="label">代数</text>
+      <view class="display-text">{{generation}}世</view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">出生年份</text>
+      <input 
+        class="input" 
+        type="number"
+        value="{{birthYear}}" 
+        placeholder="如: 1950"
+        bindinput="onBirthYearInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">去世年份</text>
+      <input 
+        class="input" 
+        type="number"
+        value="{{deathYear}}" 
+        placeholder="如: 2020"
+        bindinput="onDeathYearInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">配偶</text>
+      <view class="spouse-picker" bindtap="showSpousePicker">
+        <text>{{spouseNames || '无'}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </view>
+
+    <view class="mask" wx:if="{{showSpouseModal}}" bindtap="hideSpousePicker"></view>
+    <view class="spouse-modal" wx:if="{{showSpouseModal}}">
+      <view class="modal-header">
+        <text>选择配偶</text>
+        <text class="close-btn" bindtap="hideSpousePicker">×</text>
+      </view>
+      <scroll-view scroll-y class="modal-content">
+        <view class="spouse-option" wx:for="{{spouseOptions}}" wx:key="_id" bindtap="toggleSpouse" data-id="{{item._id}}">
+          <checkbox value="{{item._id}}" checked="{{utils.includes(selectedSpouses, item._id)}}" disabled/>
+          <text>{{item.name}}</text>
+        </view>
+      </scroll-view>
+      <view class="modal-footer">
+        <view class="cancel-btn" bindtap="hideSpousePicker">取消</view>
+        <view class="confirm-btn" bindtap="confirmSpouse">确定</view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">父亲</text>
+      <picker 
+        mode="selector" 
+        range="{{fatherOptions}}" 
+        range-key="name" 
+        value="{{fatherIndex}}"
+        bindchange="onFatherChange"
+      >
+        <view class="picker">
+          {{fatherIndex >= 0 ? fatherOptions[fatherIndex].name : '请选择父亲'}}
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">母亲</text>
+      <picker 
+        mode="selector" 
+        range="{{motherOptions}}" 
+        range-key="name" 
+        value="{{motherIndex}}"
+        bindchange="onMotherChange"
+      >
+        <view class="picker">
+          {{motherIndex >= 0 ? motherOptions[motherIndex].name : '请选择母亲'}}
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">头像</text>
+      <view class="avatar-container">
+        <view class="avatar-picker" bindtap="onChooseAvatar">
+          <image wx:if="{{avatar}}" src="{{avatar}}" mode="aspectFill" class="avatar-img"></image>
+          <view wx:else class="avatar-placeholder">
+            <text>+</text>
+          </view>
+        </view>
+        <view wx:if="{{avatar}}" class="avatar-actions">
+          <view class="avatar-action-btn preview" bindtap="onPreviewAvatar">预览</view>
+          <view class="avatar-action-btn delete" bindtap="onDeleteAvatar">删除</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">简介</text>
+      <textarea 
+        class="textarea" 
+        value="{{bio}}" 
+        placeholder="请输入个人简介"
+        bindinput="onBioInput"
+      />
+    </view>
+  </view>
+
+  <view class="save-btn" bindtap="onSave">
+    <text>{{loading ? '保存中...' : '保存'}}</text>
+  </view>
+</view>

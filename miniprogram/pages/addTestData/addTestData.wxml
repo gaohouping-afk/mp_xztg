@@ -1,0 +1,26 @@
+<view class="container">
+  <view class="title">族谱测试数据</view>
+  <view class="desc">点击下方按钮添加模拟族谱数据</view>
+  <view class="desc">将导入刘氏历史皇室成员（119位）</view>
+  
+  <view class="tree-preview">
+    <view class="gen">西汉：刘邦 -> 刘恒 -> 刘启 -> 刘彻 -> 刘询 -> 刘欣</view>
+    <view class="line">↓</view>
+    <view class="gen">东汉：刘秀 -> 刘庄 -> 刘炟 -> 刘肇 -> 刘保 -> 刘志</view>
+    <view class="line">↓</view>
+    <view class="gen">蜀汉：刘备 -> 刘禅 -> 刘谌</view>
+  </view>
+
+  <view class="progress-box" wx:if="{{loading}}">
+    <progress percent="{{(progress / total) * 100}}" stroke-width="6" active color="#8B4513" />
+    <view class="status-text">{{statusText}}</view>
+  </view>
+
+  <button 
+    class="btn" 
+    bindtap="addTestData" 
+    loading="{{loading}}"
+  >
+    {{loading ? '正在执行导入...' : '开始批量导入历史数据'}}
+  </button>
+</view>

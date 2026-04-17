@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/familyTree/familyTree",
+    "pages/member/member",
+    "pages/memberEdit/memberEdit",
+    "pages/addTestData/addTestData",
+    "pages/story/story",
+    "pages/storyDetail/storyDetail",
+    "pages/storyEdit/storyEdit",
+    "pages/about/about"
+  ],
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#8B4513",
+    "navigationBarTitleText": "族谱",
+    "navigationBarTextStyle": "white"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

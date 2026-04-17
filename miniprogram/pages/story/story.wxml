@@ -1,0 +1,49 @@
+<view class="page-container">
+  <scroll-view 
+    class="story-list" 
+    scroll-y="{{true}}"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+    wx:if="{{!loading}}"
+  >
+    <view 
+      class="story-item" 
+      wx:for="{{stories}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="onStoryTap"
+    >
+      <view class="story-year">
+        <text class="year-era">{{item.yearOrder < 0 ? '公元前' : '公元'}}</text>
+        <text class="year-num">{{item.yearOrder < 0 ? (item.yearOrder * -1) : item.yearOrder}}</text>
+      </view>
+      <view class="story-content">
+        <view class="story-title">{{item.title}}</view>
+        <view class="story-desc">{{item.description}}</view>
+        <view class="story-meta">
+          <text wx:if="{{item.location}}">地点: {{item.location}}</text>
+          <text wx:if="{{item.relatedMembers}}">相关成员: {{item.relatedMembers}}</text>
+        </view>
+      </view>
+      <view class="story-actions">
+        <view 
+          class="action-btn delete" 
+          catchtap="onDeleteStory" 
+          data-id="{{item._id}}"
+        >删除</view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{stories.length === 0}}">
+      <text>暂无迁徙故事，点击添加</text>
+    </view>
+  </scroll-view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="add-btn" bindtap="onAddStory">
+    <text>+</text>
+  </view>
+</view>

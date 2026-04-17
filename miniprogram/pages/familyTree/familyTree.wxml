@@ -1,0 +1,85 @@
+<view class="page-container">
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <input 
+        class="search-input" 
+        value="{{searchKey}}"
+        placeholder="搜索成员姓名并点击跳转" 
+        bindinput="onSearch"
+      />
+      <view class="search-results" wx:if="{{searchKey && displayMembers.length > 0}}">
+        <view 
+          class="search-result-item" 
+          wx:for="{{displayMembers}}" 
+          wx:key="_id"
+          bindtap="onSearchResultTap"
+          data-id="{{item._id}}"
+        >
+          <text>{{item.name}} ({{item.generation}}世)</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="filter-row">
+      <picker 
+        mode="selector" 
+        range="{{branchOptions}}" 
+        range-key="name"
+        value="{{selectedBranchIndex}}"
+        bindchange="onBranchChange"
+      >
+        <view class="branch-picker">
+          <text>{{selectedBranchIndex >= 0 ? branchOptions[selectedBranchIndex].name : '选择支脉'}}</text>
+          <text class="picker-arrow">▼</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="tree-wrapper" wx:if="{{!loading}}">
+    <scroll-view 
+      class="tree-scroll" 
+      scroll-x="{{true}}" 
+      scroll-y="{{true}}" 
+      scroll-with-animation="{{true}}"
+      enhanced="{{true}}"
+      show-scrollbar="{{false}}"
+      bindscroll="onScroll"
+      scroll-top="{{scrollY}}"
+      scroll-left="{{scrollX}}"
+      style="width: 100%; height: 100%;"
+    >
+      <view class="tree-inner" style="width: {{treeViewWidth}}px; min-height: {{treeViewHeight}}px; transform: scale({{scale}}); transform-origin: {{scaleOriginX}}px {{scaleOriginY}}px;">
+        <family-tree 
+          members="{{members}}" 
+          rootId="{{rootId}}"
+          itemMargin="80rpx"
+          bind:nodetap="onNodeTap"
+        />
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 左侧按钮组 -->
+  <view class="fab-group left">
+    <view class="fab-btn reset" bindtap="onResetRoot">
+      <image class="fab-icon" src="/images/icons/home.svg" mode="aspectFit"/>
+    </view>
+    <view class="fab-btn add" bindtap="onAddMember">
+      <image class="fab-icon" src="/images/icons/add-user.svg" mode="aspectFit"/>
+    </view>
+  </view>
+
+  <!-- 右侧缩放按钮组 -->
+  <view class="fab-group right">
+    <view class="fab-btn zoom-in" bindtap="onZoomIn">
+      <text class="fab-icon">+</text>
+    </view>
+    <view class="fab-btn zoom-out" bindtap="onZoomOut">
+      <text class="fab-icon">−</text>
+    </view>
+    <view class="fab-btn reset-zoom" bindtap="onResetZoom">
+      <image class="fab-icon" src="/images/icons/reset.svg" mode="aspectFit"/>
+    </view>
+  </view>
+</view>

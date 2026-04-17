@@ -1,0 +1,235 @@
+.tree-container,
+.user-super-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user-sons-container {
+  display: flex;
+  align-items: center;
+}
+
+.user-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user-info-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+}
+
+.spouse-divider {
+  width: 20rpx;
+  height: 2rpx;
+  background-color: #E5E5E5;
+  margin: 0 -5rpx;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.user-info.spouse .user-card {
+  border-color: #D2B48C;
+  background-color: #FFFAF0;
+}
+
+.user-card {
+  width: 180rpx;
+  min-height: 200rpx;
+  border: 2rpx solid #D2B48C;
+  border-radius: 4rpx;
+  background-color: #FFFEF5;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+}
+
+.user-card-line-1 {
+  position: absolute;
+  left: 60rpx;
+  top: 0;
+  height: 80%;
+  width: 2rpx;
+  background: repeating-linear-gradient(
+    to bottom,
+    #D2B48C 0,
+    #D2B48C 8rpx,
+    transparent 8rpx,
+    transparent 16rpx
+  );
+}
+
+.user-card-line-2 {
+  position: absolute;
+  left: 120rpx;
+  top: 0;
+  height: 80%;
+  width: 2rpx;
+  background: repeating-linear-gradient(
+    to bottom,
+    #D2B48C 0,
+    #D2B48C 8rpx,
+    transparent 8rpx,
+    transparent 16rpx
+  );
+}
+
+.card-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 0;
+  position: relative;
+}
+
+.card-col-left {
+  position: relative;
+}
+
+.card-col-middle {
+  position: relative;
+}
+
+.card-col-right {
+  position: relative;
+}
+
+.card-dot-top {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  position: absolute;
+  top: 24rpx;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.card-col-left .card-dot-top {
+  background-color: #000000;
+}
+
+.card-col-middle .card-dot-top {
+  background-color: #8B4513;
+}
+
+.card-col-right .card-dot-top {
+  background-color: #FFFEF5;
+  border: 2rpx solid #D2B48C;
+  box-sizing: border-box;
+}
+
+.card-text-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 26rpx;
+  color: #333;
+  font-family: "SimKai", "楷体_GB2312", "STKaiti", serif;
+  letter-spacing: 4rpx;
+}
+
+.card-col-left .card-text-vertical {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.card-name {
+  font-size: 34rpx;
+  color: #8B4513;
+  font-weight: bold;
+}
+
+.card-years {
+  font-size: 16rpx;
+  color: #999;
+  position: absolute;
+  bottom: 8rpx;
+  white-space: nowrap;
+  transform: scale(0.8);
+}
+
+.card-col-right .card-text-vertical {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.card-gender {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 2rpx solid #D2B48C;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22rpx;
+  line-height: 36rpx;
+  color: #8B4513;
+  margin-top: 8rpx;
+}
+
+.gender-male {
+  background-color: #FFFEF5;
+}
+
+.gender-female {
+  background-color: #FFF0F5;
+}
+
+.first-line,
+.last-line,
+.item-none {
+  width: 50%;
+  height: 4rpx;
+  background-color: #D2B48C;
+}
+
+.first-line {
+  margin-left: 50%;
+}
+
+.none-height {
+  height: 0 !important;
+}
+
+.none-width {
+  width: 0 !important;
+}
+
+.item-none {
+  width: 100% !important;
+  height: 4rpx;
+}
+
+.root-line,
+.vertical-line {
+  width: 4rpx;
+  height: 40rpx;
+  background-color: #D2B48C;
+}
+
+.last-line {
+  margin-right: 50%;
+}
+
+.children-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.children-super {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+

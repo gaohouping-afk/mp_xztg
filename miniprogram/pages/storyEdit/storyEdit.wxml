@@ -1,0 +1,93 @@
+<view class="page-container">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">标题 *</text>
+      <input 
+        class="input" 
+        value="{{title}}" 
+        placeholder="请输入故事标题"
+        bindinput="onTitleInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">年份</text>
+      <view class="year-input-row">
+        <picker mode="selector" range="{{yearEraOptions}}" range-key="name" bindchange="onYearEraChange" value="{{yearEra == '-1' ? 0 : (yearEra == '1' ? 1 : 0)}}">
+          <view class="year-era-picker">
+             {{yearEra === '-1' ? '公元前' : '公元'}}
+           </view>
+        </picker>
+        <input 
+          class="input year-input" 
+          value="{{year}}" 
+          type="number"
+          placeholder="年份"
+          bindinput="onYearInput"
+        />
+        <text class="year-suffix">年</text>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="label">地点</text>
+      <input 
+        class="input" 
+        value="{{location}}" 
+        placeholder="迁徙地点"
+        bindinput="onLocationInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">简介</text>
+      <textarea 
+        class="textarea" 
+        value="{{description}}" 
+        placeholder="简短描述"
+        bindinput="onDescriptionInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">详细内容</text>
+      <textarea 
+        class="textarea content" 
+        value="{{content}}" 
+        placeholder="请输入迁徙故事的详细内容"
+        bindinput="onContentInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">相关成员</text>
+      <input 
+        class="input" 
+        value="{{relatedMembers}}" 
+        placeholder="相关成员姓名"
+        bindinput="onRelatedMembersInput"
+      />
+    </view>
+
+    <view class="form-item column">
+      <text class="label">图片</text>
+      <view class="images-grid">
+        <view 
+          class="image-item" 
+          wx:for="{{images}}"
+          wx:key="index"
+        >
+          <image src="{{item}}" mode="aspectFill"></image>
+          <view class="remove-btn" catchtap="onRemoveImage" data-index="{{index}}">×</view>
+        </view>
+        <view class="add-image" bindtap="onChooseImages" wx:if="{{images.length < 9}}">
+          <text>+</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="save-btn" bindtap="onSave">
+    <text>{{loading ? '保存中...' : '保存'}}</text>
+  </view>
+</view>

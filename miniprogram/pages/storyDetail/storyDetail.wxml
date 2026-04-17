@@ -1,0 +1,35 @@
+<view class="page-container" wx:if="{{story}}">
+  <view class="story-header">
+    <view class="story-year">{{story.yearOrder < 0 ? '公元前' + (story.yearOrder * -1) + '年' : (story.yearOrder > 0 ? '公元' + story.yearOrder + '年' : story.year)}}</view>
+    <view class="story-title">{{story.title}}</view>
+    <view class="story-meta">
+      <text wx:if="{{story.location}}">地点: {{story.location}}</text>
+      <text wx:if="{{story.relatedMembers}}">相关成员: {{story.relatedMembers}}</text>
+    </view>
+    <view class="story-desc" wx:if="{{story.description}}">
+      <text>{{story.description}}</text>
+    </view>
+  </view>
+
+  <view class="story-body">
+    <text class="story-text">{{story.content}}</text>
+  </view>
+
+  <view class="story-images" wx:if="{{story.images && story.images.length > 0}}">
+    <image 
+      wx:for="{{story.images}}"
+      wx:key="index"
+      src="{{item}}"
+      mode="widthFix"
+      class="story-img"
+    ></image>
+  </view>
+
+  <view class="edit-btn" bindtap="onEdit">
+    <text>编辑</text>
+  </view>
+</view>
+
+<view class="loading" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>

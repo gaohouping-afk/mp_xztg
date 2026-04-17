@@ -1,0 +1,6 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "成员档案",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50
+}

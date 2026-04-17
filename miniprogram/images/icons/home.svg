@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="houseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#A0522D"/>
+      <stop offset="100%" style="stop-color:#8B4513"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#houseGrad)" d="M24 6L6 20v22h12V30h12v12h12V20L24 6z"/>
+  <rect x="21" y="32" width="6" height="10" fill="#FAF9F5"/>
+</svg>

@@ -1,0 +1,58 @@
+<view class="page-container">
+  <view class="about-header">
+    <view class="app-name">家族族谱</view>
+    <view class="version">版本 {{version}}</view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">功能特点</view>
+    <view class="feature-list">
+      <view class="feature-item">
+        <text class="feature-icon">🌳</text>
+        <text class="feature-text">族谱树可视化 - 直观展示家族成员关系树状图</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">👥</text>
+        <text class="feature-text">成员管理 - 增删改查家族成员信息</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">📖</text>
+        <text class="feature-text">迁徙故事 - 记录和展示家族迁徙历史</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">📷</text>
+        <text class="feature-text">头像管理 - 支持成员头像上传、预览、删除</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">💾</text>
+        <text class="feature-text">数据缓存 - 本地缓存加速加载，支持数据版本同步</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">☁️</text>
+        <text class="feature-text">云端存储 - 图片等文件存储在云端</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">技术栈</view>
+    <view class="tech-list">
+      <view class="tech-item">微信小程序原生开发</view>
+      <view class="tech-item">微信云开发（数据库、云存储、云函数）</view>
+      <view class="tech-item">JavaScript</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">关于开源</view>
+    <view class="about-content">
+      <text>本项目为开源项目，基于 GPL 协议开源。</text>
+      <text>\n</text>
+      <text>您可以免费使用、复制、修改和分发本项目代码。</text>
+    </view>
+  </view>
+
+  <view class="footer">
+    <text>© 2026 家族族谱小程序</text>
+  </view>
+</view>

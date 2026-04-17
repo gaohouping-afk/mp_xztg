@@ -1,0 +1,14 @@
+<view class="family-tree-wrapper">
+  <view class="tree-root">
+    <tree-node 
+      wx:if="{{treeData}}"
+      dataSource="{{treeData}}"
+      isRoot="{{true}}"
+      members="{{members}}"
+      itemMargin="{{itemMargin}}"
+      horizontalLineColor="{{lineColor}}"
+      verticalLineColor="{{lineColor}}"
+      mut-bind:nodetap="onNodeTap"
+    ></tree-node>
+  </view>
+</view>

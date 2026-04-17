@@ -1,0 +1,86 @@
+<view class="page-container">
+  <view class="search-bar">
+    <input 
+      class="search-input" 
+      placeholder="搜索成员姓名" 
+      bindinput="onSearch"
+    />
+    <view class="filter-btns">
+      <view 
+        class="filter-btn {{!filterGender ? 'active' : ''}}" 
+        bindtap="onFilterGender"
+        data-gender=""
+      >全部</view>
+      <view 
+        class="filter-btn {{filterGender === '男' ? 'active' : ''}}" 
+        bindtap="onFilterGender"
+        data-gender="男"
+      >男</view>
+      <view 
+        class="filter-btn {{filterGender === '女' ? 'active' : ''}}" 
+        bindtap="onFilterGender"
+        data-gender="女"
+      >女</view>
+    </view>
+  </view>
+
+  <scroll-view 
+    class="member-list" 
+    scroll-y="{{true}}"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+    wx:if="{{!loading || displayMembers.length > 0}}"
+  >
+    <view 
+      class="member-item" 
+      wx:for="{{displayMembers}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="onMemberTap"
+    >
+      <view class="member-avatar">
+        <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill"></image>
+        <text wx:else class="avatar-text">{{item.name[0]}}</text>
+      </view>
+      <view class="member-info">
+        <view class="member-header">
+          <text class="member-name">{{item.name}}</text>
+          <text class="member-generation">第{{item.generation}}代</text>
+        </view>
+        <view class="member-detail" wx:if="{{item.birthYear}}">
+          <text>{{item.birthYear}}{{item.deathYear ? ' - ' + item.deathYear : ''}}</text>
+        </view>
+        <view class="member-detail" wx:if="{{item.spouseNames}}">
+          <text>配偶: {{item.spouseNames}}</text>
+        </view>
+      </view>
+      <view class="member-actions">
+        <view 
+          class="action-btn delete" 
+          catchtap="onDeleteMember" 
+          data-id="{{item._id}}"
+        >删除</view>
+      </view>
+    </view>
+
+    <view class="load-more" wx:if="{{loading && displayMembers.length > 0}}">
+      <text>加载中...</text>
+    </view>
+
+    <view class="no-more" wx:if="{{!hasMore && displayMembers.length > 0}}">
+      <text>已加载全部 {{displayMembers.length}} 条数据</text>
+    </view>
+
+    <view class="empty" wx:if="{{displayMembers.length === 0 && !loading}}">
+      <text>暂无成员，请添加</text>
+    </view>
+  </scroll-view>
+
+  <view class="loading" wx:if="{{loading && displayMembers.length === 0}}">
+    <text>加载中...</text>
+  </view>
+
+  <view class="add-btn" bindtap="onAddMember">
+    <text>+</text>
+  </view>
+</view>
