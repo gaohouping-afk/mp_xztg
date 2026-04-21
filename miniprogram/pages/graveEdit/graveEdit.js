@@ -246,10 +246,30 @@ Page({
         if (!this.data.location) {
           this.setData({ location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })
         }
-        wx.showToast({ 
-          title: `已获取位置 (精度:${accuracy.toFixed(0)}m)`, 
-          icon: 'success', 
-          duration: 2000 
+        
+        let accuracyLevel = ''
+        let accuracyDesc = ''
+        if (accuracy < 10) {
+          accuracyLevel = '优秀'
+          accuracyDesc = '精度非常高，位置准确'
+        } else if (accuracy < 20) {
+          accuracyLevel = '良好'
+          accuracyDesc = '精度较好，满足日常使用'
+        } else {
+          accuracyLevel = '一般'
+          accuracyDesc = '精度较低，可到室外空旷处重新获取'
+        }
+        
+        wx.showModal({
+          title: `位置获取成功 (精度:${accuracy.toFixed(0)}m)`,
+          content: `评价：${accuracyLevel}\n\n${accuracyDesc}\n\n如需更高精度，建议使用专业测量软件测量后手动填入经纬度。`,
+          confirmText: '知道了',
+          showCancel: false,
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              console.log('位置已获取', { latitude, longitude, accuracy })
+            }
+          }
         })
       },
       fail: (e) => {
@@ -267,37 +287,6 @@ Page({
           })
         } else {
           wx.showToast({ title: '获取位置失败', icon: 'none' })
-        }
-      }
-    })
-  },
-
-  onChooseLocation() {
-    wx.chooseLocation({
-      success: (res) => {
-        if (res.latitude && res.longitude) {
-          this.setData({
-            location: res.address || res.name || '',
-            latitude: String(res.latitude),
-            longitude: String(res.longitude)
-          })
-        }
-      },
-      fail: (e) => {
-        console.error('chooseLocation error:', e)
-        if (e.errMsg && e.errMsg.includes('auth deny')) {
-          wx.showModal({
-            title: '需要位置权限',
-            content: '请在设置中开启位置权限',
-            confirmText: '去设置',
-            success: (res) => {
-              if (res.confirm) {
-                wx.openSetting()
-              }
-            }
-          })
-        } else {
-          wx.showToast({ title: '请检查位置权限', icon: 'none' })
         }
       }
     })
