@@ -39,16 +39,36 @@
 .hero-title {
   font-size: 56rpx;
   font-weight: bold;
-  color: #FFFFFF;
   letter-spacing: 4rpx;
   margin-bottom: 16rpx;
   text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.3);
+  background: linear-gradient(90deg, #FFFFFF, #FFF8DC, #FFE4B5, #FFF8DC, #FFFFFF);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientMove 2.5s ease-in-out infinite;
 }
 
 .hero-subtitle {
   font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.95);
   letter-spacing: 2rpx;
+  background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,250,205,0.95), rgba(255,255,255,0.9), rgba(255,250,205,0.95), rgba(255,255,255,0.9));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: subtitleShimmer 3.5s ease-in-out infinite;
+}
+
+@keyframes gradientMove {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes subtitleShimmer {
+  0%, 100% { background-position: 0% 50%; opacity: 0.8; }
+  50% { background-position: 100% 50%; opacity: 1; }
 }
 
 .menu-container {

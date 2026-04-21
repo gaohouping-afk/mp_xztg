@@ -235,10 +235,10 @@ Page({
 
   onGetWGS84Location() {
     wx.getLocation({
-      type: 'gcj02',
+      type: 'wgs84',
       isHighAccuracy: true,
       success: (res) => {
-        const { latitude, longitude } = res
+        const { latitude, longitude, accuracy } = res
         this.setData({
           latitude: String(latitude),
           longitude: String(longitude)
@@ -246,7 +246,11 @@ Page({
         if (!this.data.location) {
           this.setData({ location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })
         }
-        wx.showToast({ title: '已获取位置', icon: 'success', duration: 1500 })
+        wx.showToast({ 
+          title: `已获取位置 (精度:${accuracy.toFixed(0)}m)`, 
+          icon: 'success', 
+          duration: 2000 
+        })
       },
       fail: (e) => {
         console.error('getLocation error:', e)

@@ -89,6 +89,68 @@
   word-break: break-all;
 }
 
+.contact-button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: normal;
+  font-size: 0;
+}
+
+.contact-button::after {
+  border: none;
+}
+
+.contact-wrapper {
+  margin-top: 20rpx;
+}
+
+.contact-box {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  border-radius: 16rpx;
+  padding: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(139, 69, 19, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-button:active .contact-box {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(139, 69, 19, 0.15);
+}
+
+.contact-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.contact-info {
+  flex: 1;
+  text-align: left;
+}
+
+.contact-text {
+  font-size: 32rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.contact-hint {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+}
+
+.contact-arrow {
+  font-size: 40rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 .about-content {
   font-size: 28rpx;
   color: #666666;

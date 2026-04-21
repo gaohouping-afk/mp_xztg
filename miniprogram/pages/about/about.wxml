@@ -60,6 +60,22 @@
   </view>
 
   <view class="section">
+    <view class="section-title">联系作者</view>
+    <button open-type="contact" class="contact-button">
+      <view class="contact-wrapper">
+        <view class="contact-box">
+          <view class="contact-icon">💬</view>
+          <view class="contact-info">
+            <text class="contact-text">联系作者</text>
+            <text class="contact-hint">点击联系作者</text>
+          </view>
+          <text class="contact-arrow">›</text>
+        </view>
+      </view>
+    </button>
+  </view>
+
+  <view class="section">
     <view class="section-title">关于开源</view>
     <view class="about-content">
       <text>本项目为开源项目，基于 GPL 协议开源。</text>
