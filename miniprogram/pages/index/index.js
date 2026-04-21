@@ -5,6 +5,30 @@ Page({
 
   onLoad() {
     this.checkAuth()
+    this.initShareMenu()
+  },
+
+  initShareMenu() {
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    })
+  },
+
+  onShareAppMessage(res) {
+    return {
+      title: '寻公问祖 - 家族族谱小程序',
+      desc: '追溯根源，铭记先祖。一个基于微信云开发的家族族谱管理小程序。',
+      path: '/pages/index/index'
+    }
+  },
+
+  onShareTimeline() {
+    return {
+      title: '寻公问祖 - 家族族谱小程序',
+      desc: '追溯根源，铭记先祖',
+      query: ''
+    }
   },
 
   checkAuth() {
