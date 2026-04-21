@@ -15,13 +15,20 @@ Page({
     editVisitDate: '',
     editVisitTime: '',
     editVisitCount: 0,
-    showMoreSheet: false
+    showMoreSheet: false,
+    sheetAnimated: false
   },
 
   onLoad(options) {
     if (options.id) {
       this.setData({ id: options.id })
       this.loadGrave(options.id)
+    }
+  },
+
+  onShow() {
+    if (this.data.id) {
+      this.loadGrave(this.data.id)
     }
   },
 
@@ -134,10 +141,16 @@ Page({
 
   onMoreTap() {
     this.setData({ showMoreSheet: true })
+    setTimeout(() => {
+      this.setData({ sheetAnimated: true })
+    }, 10)
   },
 
   onCloseSheet() {
-    this.setData({ showMoreSheet: false })
+    this.setData({ sheetAnimated: false })
+    setTimeout(() => {
+      this.setData({ showMoreSheet: false })
+    }, 300)
   },
 
   onNavigate() {
@@ -148,8 +161,8 @@ Page({
     }
 
     wx.openLocation({
-      latitude: grave.latitude,
-      longitude: grave.longitude,
+      latitude: parseFloat(grave.latitude),
+      longitude: parseFloat(grave.longitude),
       name: grave.location || '墓碑位置',
       address: grave.location || ''
     })

@@ -14,11 +14,25 @@
   margin-bottom: 32rpx;
 }
 
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
 .label {
   display: block;
   font-size: 28rpx;
   color: #666666;
-  margin-bottom: 16rpx;
+}
+
+.label-hint {
+  font-size: 22rpx;
+  color: #8B4513;
+  background: #FDF6F0;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
 }
 
 .input {
@@ -92,15 +106,33 @@
   flex: 1;
 }
 
-.location-btn {
-  width: 80rpx;
-  height: 80rpx;
-  background: #8B4513;
-  border-radius: 12rpx;
+.gps-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(139, 69, 19, 0.3);
+}
+
+.gps-icon {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.gps-text {
+  font-size: 18rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-top: 4rpx;
+}
+
+.gps-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
 }
 
 .location-hint {
@@ -109,38 +141,27 @@
   margin-top: 12rpx;
 }
 
-.location-coords {
-  font-size: 24rpx;
-  color: #8B4513;
-  margin-top: 12rpx;
-}
-
-.coords-input {
+.coords-row {
   display: flex;
   align-items: center;
-  margin-top: 16rpx;
   gap: 8rpx;
+  margin-top: 16rpx;
 }
 
 .coord-input {
   flex: 1;
-  height: 64rpx;
+  height: 72rpx;
   background: #F5F5F5;
   border-radius: 8rpx;
-  padding: 0 16rpx;
-  font-size: 26rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
   box-sizing: border-box;
+  min-width: 180rpx;
 }
 
 .coord-sep {
   color: #999999;
   font-size: 28rpx;
-}
-
-.coord-hint {
-  font-size: 22rpx;
-  color: #999999;
-  margin-left: 8rpx;
   flex-shrink: 0;
 }
 

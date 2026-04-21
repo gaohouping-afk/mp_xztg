@@ -422,6 +422,42 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.action-sheet.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.action-sheet.show .sheet-mask {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.action-sheet.show .sheet-card {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.action-sheet.show .sheet-cancel {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sheet-mask {
@@ -430,58 +466,100 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4rpx);
 }
 
 .sheet-card {
   position: absolute;
-  bottom: 160rpx;
-  left: 20rpx;
-  right: 20rpx;
+  bottom: calc(200rpx + env(safe-area-inset-bottom));
+  left: 24rpx;
+  right: 24rpx;
   background: #FFFFFF;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   overflow: hidden;
+  box-shadow: 0 -8rpx 40rpx rgba(0, 0, 0, 0.15);
 }
 
 .sheet-item {
   display: flex;
   align-items: center;
-  padding: 32rpx;
-  font-size: 30rpx;
+  justify-content: center;
+  padding: 36rpx 32rpx;
+  font-size: 32rpx;
   color: #333333;
-  border-bottom: 1rpx solid #F0EDE8;
+  position: relative;
+  overflow: hidden;
+}
+
+.sheet-item::after {
+  content: '';
+  position: absolute;
+  left: 32rpx;
+  right: 32rpx;
+  bottom: 0;
+  height: 1rpx;
+  background: #F0EDE8;
+}
+
+.sheet-item:last-child::after {
+  display: none;
+}
+
+.sheet-item:first-child {
+  border-radius: 32rpx 32rpx 0 0;
 }
 
 .sheet-item:last-child {
-  border-bottom: none;
+  border-radius: 0 0 32rpx 32rpx;
 }
 
-.sheet-item:active {
+.sheet-item:active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: #F8F6F3;
+  animation: ripple 0.3s ease;
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .sheet-item.danger {
-  color: #FF6B6B;
+  color: #E74C3C;
 }
 
 .sheet-icon {
   margin-right: 16rpx;
-  font-size: 32rpx;
+  font-size: 36rpx;
 }
 
 .sheet-cancel {
   position: absolute;
-  bottom: calc(40rpx + env(safe-area-inset-bottom));
-  left: 20rpx;
-  right: 20rpx;
-  height: 96rpx;
+  bottom: calc(60rpx + env(safe-area-inset-bottom));
+  left: 24rpx;
+  right: 24rpx;
+  height: 100rpx;
   background: #FFFFFF;
-  border-radius: 48rpx;
+  border-radius: 50rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30rpx;
+  font-size: 32rpx;
   color: #666666;
+  font-weight: 500;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
 }
 
 .sheet-cancel:active {

@@ -1,37 +1,57 @@
-<view class="container">
-  <view class="header">
-    <image class="logo" src="/images/logo.png" mode="aspectFit" wx:if="{{false}}"></image>
-    <view class="title">族谱小程序</view>
-    <view class="subtitle">记录家族历史，传承家族文化</view>
-  </view>
-
-  <view class="menu-grid">
-    <view class="menu-item" bindtap="goToFamilyTree">
-      <view class="menu-icon">族</view>
-      <text class="menu-text">家族族谱</text>
-      <text class="menu-desc">查看族谱树</text>
-    </view>
-    <view class="menu-item" bindtap="goToMember">
-      <view class="menu-icon">成</view>
-      <text class="menu-text">成员档案</text>
-      <text class="menu-desc">管理成员信息</text>
-    </view>
-    <view class="menu-item" bindtap="goToStory">
-      <view class="menu-icon">迁</view>
-      <text class="menu-text">迁徙故事</text>
-      <text class="menu-desc">家族迁徙历史</text>
-    </view>
-    <view class="menu-item" bindtap="goToGrave">
-      <view class="menu-icon">墓</view>
-      <text class="menu-text">墓碑纪念</text>
-      <text class="menu-desc">管理墓碑信息</text>
+<view class="page">
+  <view class="hero-section">
+    <view class="hero-bg"></view>
+    <view class="hero-content">
+      <image class="hero-badge" src="/images/icons/temple.svg" mode="aspectFit" />
+      <view class="hero-title">寻公问祖</view>
+      <view class="hero-subtitle">追溯根源，铭记先祖</view>
     </view>
   </view>
 
-  <view class="init-section">
-    <!-- <button class="init-btn" bindtap="initDatabase">初始化数据库</button> -->
-    <!-- <button class="init-btn test-btn" bindtap="goToAddTestData">添加测试数据</button> -->
-    <!-- <button class="init-btn danger-btn" bindtap="clearAllData">清理数据</button> -->
-    <button class="init-btn" bindtap="goToAbout">关于</button>
+  <view class="menu-container">
+    <view class="menu-grid">
+      <view class="menu-card" bindtap="goToFamilyTree">
+        <image class="card-icon" src="/images/icons/family.svg" mode="aspectFit" />
+        <view class="card-content">
+          <text class="card-title">家族族谱</text>
+          <text class="card-desc">查看族谱树</text>
+        </view>
+        <view class="card-arrow">›</view>
+      </view>
+
+      <view class="menu-card" bindtap="goToMember">
+        <image class="card-icon" src="/images/icons/members.svg" mode="aspectFit" />
+        <view class="card-content">
+          <text class="card-title">成员档案</text>
+          <text class="card-desc">管理成员信息</text>
+        </view>
+        <view class="card-arrow">›</view>
+      </view>
+
+      <view class="menu-card" bindtap="goToStory">
+        <image class="card-icon" src="/images/icons/story.svg" mode="aspectFit" />
+        <view class="card-content">
+          <text class="card-title">迁徙故事</text>
+          <text class="card-desc">家族迁徙历史</text>
+        </view>
+        <view class="card-arrow">›</view>
+      </view>
+
+      <view class="menu-card" bindtap="goToGrave">
+        <image class="card-icon" src="/images/icons/grave.svg" mode="aspectFit" />
+        <view class="card-content">
+          <text class="card-title">墓碑纪念</text>
+          <text class="card-desc">管理墓碑信息</text>
+        </view>
+        <view class="card-arrow">›</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer-section">
+    <!-- <button class="init-btn" bindtap="initDatabase">初始化数据库</button>
+    <button class="init-btn test-btn" bindtap="goToAddTestData">添加测试数据</button>
+    <button class="init-btn danger-btn" bindtap="clearAllData">清理数据</button> -->
+    <button class="about-btn" bindtap="goToAbout">关于</button>
   </view>
 </view>

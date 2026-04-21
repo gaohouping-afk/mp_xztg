@@ -159,10 +159,12 @@ Page({
       const enrichedGraves = graves.map(grave => {
         const member = membersMap[grave.memberId]
         const typeInfo = GRAVE_TYPES.find(t => t.value === grave.graveType) || GRAVE_TYPES[4]
+        const memberName = member ? member.name : '未知成员'
 
         return {
           ...grave,
-          memberName: member ? member.name : '未知成员',
+          memberName: memberName,
+          memberLastChar: memberName.slice(-1),
           typeLabel: typeInfo.label,
           typeColor: typeInfo.color
         }
@@ -170,6 +172,7 @@ Page({
 
       this.setData({ graves: enrichedGraves })
       wx.setStorageSync(CACHE_KEY, enrichedGraves)
+      this.getFilteredGraves()
     } catch (e) {
       console.error('enrichWithMemberInfo error:', e)
     }
@@ -178,9 +181,11 @@ Page({
   processGravesData(gravesData) {
     const enrichedGraves = gravesData.map(grave => {
       const typeInfo = GRAVE_TYPES.find(t => t.value === grave.graveType) || GRAVE_TYPES[4]
+      const memberName = grave.memberName || '未知成员'
 
       return {
         ...grave,
+        memberLastChar: memberName.slice(-1),
         typeLabel: typeInfo.label,
         typeColor: typeInfo.color
       }
@@ -193,6 +198,7 @@ Page({
     })
 
     this.enrichWithMemberInfo(enrichedGraves)
+    this.getFilteredGraves()
   },
 
   onSearch(e) {

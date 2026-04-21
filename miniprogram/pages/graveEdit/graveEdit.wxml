@@ -27,7 +27,10 @@
     </view>
 
     <view class="form-item">
-      <text class="label">墓址位置</text>
+      <view class="label-row">
+        <text class="label">墓址位置</text>
+        <text class="label-hint">GPS坐标( WGS84 )</text>
+      </view>
       <view class="location-input">
         <input
           class="input"
@@ -35,17 +38,16 @@
           placeholder="请输入墓碑位置描述"
           bindinput="onLocationInput"
         />
-        <view class="location-btn" bindtap="onChooseLocation">
-          <text>📍</text>
+        <view class="gps-btn" bindtap="onGetWGS84Location">
+          <text class="gps-icon">📍</text>
+          <text class="gps-text">GPS</text>
         </view>
       </view>
-      <view class="location-coords" wx:if="{{latitude && longitude}}">
-        <text>已定位: {{latitude}}, {{longitude}}</text>
-      </view>
-      <view class="coords-input">
+      <view class="coords-row">
         <input
           class="coord-input"
-          type="digit"
+          type="text"
+          inputmode="decimal"
           value="{{latitude}}"
           placeholder="纬度"
           bindinput="onLatitudeInput"
@@ -53,12 +55,12 @@
         <text class="coord-sep">,</text>
         <input
           class="coord-input"
-          type="digit"
+          type="text"
+          inputmode="decimal"
           value="{{longitude}}"
           placeholder="经度"
           bindinput="onLongitudeInput"
         />
-        <text class="coord-hint">手动输入坐标</text>
       </view>
     </view>
 

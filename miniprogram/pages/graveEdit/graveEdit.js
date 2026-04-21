@@ -233,21 +233,76 @@ Page({
     this.setData({ description: e.detail.value })
   },
 
+  onGetWGS84Location() {
+    wx.getLocation({
+      type: 'gcj02',
+      isHighAccuracy: true,
+      success: (res) => {
+        const { latitude, longitude } = res
+        this.setData({
+          latitude: String(latitude),
+          longitude: String(longitude)
+        })
+        if (!this.data.location) {
+          this.setData({ location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })
+        }
+        wx.showToast({ title: '已获取位置', icon: 'success', duration: 1500 })
+      },
+      fail: (e) => {
+        console.error('getLocation error:', e)
+        if (e.errMsg && e.errMsg.includes('auth deny')) {
+          wx.showModal({
+            title: '需要位置权限',
+            content: '请在设置中开启位置权限以便获取墓碑坐标',
+            confirmText: '去设置',
+            success: (res) => {
+              if (res.confirm) {
+                wx.openSetting()
+              }
+            }
+          })
+        } else {
+          wx.showToast({ title: '获取位置失败', icon: 'none' })
+        }
+      }
+    })
+  },
+
   onChooseLocation() {
     wx.chooseLocation({
       success: (res) => {
-        if (res.name || res.address) {
+        if (res.latitude && res.longitude) {
           this.setData({
-            location: res.address || res.name,
-            latitude: res.latitude,
-            longitude: res.longitude
+            location: res.address || res.name || '',
+            latitude: String(res.latitude),
+            longitude: String(res.longitude)
           })
         }
       },
       fail: (e) => {
         console.error('chooseLocation error:', e)
-        wx.showToast({ title: '请检查位置权限', icon: 'none' })
+        if (e.errMsg && e.errMsg.includes('auth deny')) {
+          wx.showModal({
+            title: '需要位置权限',
+            content: '请在设置中开启位置权限',
+            confirmText: '去设置',
+            success: (res) => {
+              if (res.confirm) {
+                wx.openSetting()
+              }
+            }
+          })
+        } else {
+          wx.showToast({ title: '请检查位置权限', icon: 'none' })
+        }
       }
+    })
+  },
+
+  onClearCoords() {
+    this.setData({
+      latitude: '',
+      longitude: ''
     })
   },
 

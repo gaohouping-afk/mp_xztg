@@ -32,6 +32,16 @@ Page({
     graveCount: 0
   },
 
+  onShow() {
+    if (this.data.id && this.data.avatarCloudPath) {
+      this.convertAvatarToTempUrl(this.data.avatarCloudPath).then(tempUrl => {
+        if (tempUrl && tempUrl !== this.data.avatar) {
+          this.setData({ avatar: tempUrl })
+        }
+      })
+    }
+  },
+
   onLoad(options) {
     const membersCache = wx.getStorageSync(CACHE_KEY) || []
     const cachedVersion = wx.getStorageSync(VERSION_KEY) || 0
@@ -59,23 +69,31 @@ Page({
   },
 
   async convertAvatarToTempUrl(avatarPath) {
-    if (!avatarPath || avatarPath.startsWith('http')) {
-      return avatarPath
-    }
+    if (!avatarPath) return ''
+    if (avatarPath.startsWith('http')) return avatarPath
     
     try {
       const res = await wx.cloud.getTempFileURL({
         fileList: [avatarPath]
       })
       
-      if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
-        return res.fileList[0].tempFileURL
+      if (res.fileList && res.fileList[0]) {
+        const fileInfo = res.fileList[0]
+        if (fileInfo.tempFileURL) {
+          return fileInfo.tempFileURL
+        }
+        if (fileInfo.status === 0 && fileInfo.fileID) {
+          return fileInfo.fileID
+        }
       }
     } catch (e) {
       console.error('convertAvatarToTempUrl error:', e)
     }
     
-    return avatarPath
+    if (avatarPath.startsWith('cloud://')) {
+      return avatarPath
+    }
+    return ''
   },
 
   async loadFromCache(data, generationFromTree) {
@@ -101,6 +119,7 @@ Page({
     const motherName = getMemberName(data.motherId)
     
     const avatarTempUrl = await this.convertAvatarToTempUrl(data.avatar)
+    const displayAvatar = avatarTempUrl || data.avatar || ''
     
     const updateData = {
       name: data.name || '',
@@ -117,7 +136,7 @@ Page({
       motherName: motherName,
       rankTitle: data.rankTitle || '',
       bio: data.bio || '',
-      avatar: avatarTempUrl,
+      avatar: displayAvatar,
       avatarCloudPath: data.avatar || ''
     }
     this.setData(updateData)
@@ -196,6 +215,7 @@ Page({
         const motherName = getMemberName(data.motherId)
         
         const avatarTempUrl = await this.convertAvatarToTempUrl(data.avatar)
+        const displayAvatar = avatarTempUrl || data.avatar || ''
         
         const updateData = {
           name: data.name || '',
@@ -212,7 +232,7 @@ Page({
           motherName: motherName,
           rankTitle: data.rankTitle || '',
           bio: data.bio || '',
-          avatar: avatarTempUrl,
+          avatar: displayAvatar,
           avatarCloudPath: data.avatar || ''
         }
         this.setData(updateData)

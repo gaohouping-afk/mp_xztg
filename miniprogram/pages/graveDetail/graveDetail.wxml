@@ -3,7 +3,7 @@
     <view class="header-main">
       <view class="avatar-wrap">
         <image wx:if="{{member.avatar}}" class="avatar-img" src="{{member.avatar}}" mode="aspectFill" />
-        <view wx:else class="avatar-placeholder">{{grave.memberName[0]}}</view>
+        <view wx:else class="avatar-placeholder">{{members.name[0]}}</view>
         <view class="avatar-badge" style="background: {{grave.typeColor}}">
           <text class="avatar-badge-text">{{grave.typeLabel}}</text>
         </view>
@@ -133,19 +133,19 @@
     </view>
   </view>
 
-  <view class="action-sheet" wx:if="{{showMoreSheet}}">
-    <view class="sheet-mask" bindtap="onCloseSheet"></view>
-    <view class="sheet-card">
-      <view class="sheet-item" bindtap="onEdit">
+  <view class="action-sheet {{sheetAnimated ? 'show' : ''}}" wx:if="{{showMoreSheet}}" bindtap="onCloseSheet">
+    <view class="sheet-mask" catchtap="onCloseSheet"></view>
+    <view class="sheet-card" catchtap="">
+      <view class="sheet-item" catchtap="onEdit">
         <text class="sheet-icon">✏️</text>
         <text>编辑墓碑信息</text>
       </view>
-      <view class="sheet-item danger" bindtap="onDelete">
+      <view class="sheet-item danger" catchtap="onDelete">
         <text class="sheet-icon">🗑️</text>
         <text>删除墓碑</text>
       </view>
     </view>
-    <view class="sheet-cancel" bindtap="onCloseSheet">取消</view>
+    <view class="sheet-cancel" catchtap="onCloseSheet">取消</view>
   </view>
 
   <view class="visit-modal" wx:if="{{showVisitModal}}">

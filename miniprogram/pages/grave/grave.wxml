@@ -50,7 +50,7 @@
       bindtap="onGraveTap"
     >
       <view class="grave-icon" style="background-color: {{item.typeColor}}">
-        <text class="icon-text">墓</text>
+        <text class="icon-text">{{item.memberLastChar}}</text>
       </view>
       <view class="grave-info">
         <view class="grave-header">

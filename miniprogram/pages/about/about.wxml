@@ -1,7 +1,8 @@
 <view class="page-container">
   <view class="about-header">
-    <view class="app-name">家族族谱</view>
+    <view class="app-name">寻公问祖</view>
     <view class="version">版本 {{version}}</view>
+    <view class="slogan">追溯根源，铭记先祖</view>
   </view>
 
   <view class="section">
@@ -20,6 +21,10 @@
         <text class="feature-text">迁徙故事 - 记录和展示家族迁徙历史</text>
       </view>
       <view class="feature-item">
+        <text class="feature-icon">🪦</text>
+        <text class="feature-text">墓碑纪念 - 管理墓碑位置、记录扫墓祭扫</text>
+      </view>
+      <view class="feature-item">
         <text class="feature-icon">📷</text>
         <text class="feature-text">头像管理 - 支持成员头像上传、预览、删除</text>
       </view>
@@ -30,6 +35,10 @@
       <view class="feature-item">
         <text class="feature-icon">☁️</text>
         <text class="feature-text">云端存储 - 图片等文件存储在云端</text>
+      </view>
+      <view class="feature-item">
+        <text class="feature-icon">📍</text>
+        <text class="feature-text">GPS定位 - 支持墓碑位置定位和导航</text>
       </view>
     </view>
   </view>
@@ -44,6 +53,13 @@
   </view>
 
   <view class="section">
+    <view class="section-title">开源地址</view>
+    <view class="repo-box">
+      <text class="repo-url">https://github.com/gaohouping-afk/mp_xztg</text>
+    </view>
+  </view>
+
+  <view class="section">
     <view class="section-title">关于开源</view>
     <view class="about-content">
       <text>本项目为开源项目，基于 GPL 协议开源。</text>
@@ -53,6 +69,6 @@
   </view>
 
   <view class="footer">
-    <text>© 2026 家族族谱小程序</text>
+    <text>© 2026 寻公问祖</text>
   </view>
 </view>
