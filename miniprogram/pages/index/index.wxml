@@ -49,9 +49,9 @@
   </view>
 
   <view class="footer-section">
-    <!-- <button class="init-btn" bindtap="initDatabase">初始化数据库</button>
-    <button class="init-btn test-btn" bindtap="goToAddTestData">添加测试数据</button>
-    <button class="init-btn danger-btn" bindtap="clearAllData">清理数据</button> -->
+    <view class="privacy-note">
+      <text>温馨提示：数据隔离，仅见本人添加内容。</text>
+    </view>
     <button class="about-btn" bindtap="goToAbout">关于</button>
   </view>
 </view>

@@ -178,8 +178,19 @@
 }
 
 .footer-section {
-  padding: 60rpx 32rpx;
+  padding: 40rpx 32rpx;
   text-align: center;
+}
+
+.privacy-note {
+  margin-bottom: 24rpx;
+  padding: 0 20rpx;
+}
+
+.privacy-note text {
+  font-size: 24rpx;
+  color: #999999;
+  line-height: 1.6;
 }
 
 .about-btn {
