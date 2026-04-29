@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="form-section">
+    <view class="form-item">
+      <text class="form-label">家族名称</text>
+      <input
+        class="form-input"
+        value="{{familyName}}"
+        placeholder="请输入家族名称"
+        bindinput="onNameInput"
+        maxlength="20"
+      />
+      <text class="form-hint">最多20个字符</text>
+    </view>
+  </view>
+
+  <view class="tip-card">
+    <view class="tip-icon">💡</view>
+    <view class="tip-content">
+      <text class="tip-title">创建家族后</text>
+      <text class="tip-text">您将成为族长，可以邀请家人加入共同维护家族数据。</text>
+    </view>
+  </view>
+
+  <view class="btn-section">
+    <button class="submit-btn {{loading ? 'loading' : ''}}" bindtap="onSubmit" disabled="{{!familyName || loading}}">
+      <text wx:if="{{!loading}}">创建家族</text>
+      <text wx:if="{{loading}}">创建中...</text>
+    </button>
+  </view>
+</view>

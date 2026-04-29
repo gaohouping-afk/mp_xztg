@@ -1,3 +1,5 @@
+const cacheManager = require('../../utils/cacheManager.js')
+
 const GRAVE_TYPES = [
   { value: 'ancestor', label: '祖先墓', color: '#8B4513' },
   { value: 'clothing', label: '衣冠冢', color: '#A0522D' },
@@ -5,9 +7,6 @@ const GRAVE_TYPES = [
   { value: 'tablet', label: '牌位', color: '#CD853F' },
   { value: 'other', label: '其他', color: '#666666' }
 ]
-
-const CACHE_KEY = 'member_members'
-const VERSION_KEY = 'member_version'
 
 Page({
   data: {
@@ -35,24 +34,47 @@ Page({
   },
 
   onLoad(options) {
+    const app = getApp()
+    const familyId = app.globalData.familyId
+
     if (options.memberId) {
       this.setData({ selectedMemberId: options.memberId })
-      this.loadMember(options.memberId)
+      this.loadMember(options.memberId, familyId)
     }
 
     if (options.id) {
       this.setData({ id: options.id, isEdit: true })
       wx.setNavigationBarTitle({ title: '编辑墓碑' })
-      this.loadGrave(options.id)
+      this.loadGrave(options.id, familyId)
     }
 
-    this.loadAllMembers()
+    this.loadAllMembers(familyId)
   },
 
-  async loadMember(memberId) {
+  async loadMember(memberId, familyId) {
     const db = wx.cloud.database()
     try {
-      const { data } = await db.collection('members').doc(memberId).get()
+      let data = null
+
+      if (familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'members',
+            familyId: familyId,
+            limit: 100
+          }
+        })
+
+        if (result.result && result.result.success && result.result.data) {
+          data = result.result.data.find(m => m._id === memberId)
+        }
+      } else {
+        const res = await db.collection('members').doc(memberId).get()
+        data = res.data
+      }
+
       if (data) {
         this.setData({ selectedMember: data })
       }
@@ -61,23 +83,38 @@ Page({
     }
   },
 
-  async loadGrave(id) {
+  async loadGrave(id, familyId) {
     wx.showLoading({ title: '加载中...' })
     try {
       const db = wx.cloud.database()
-      const { data } = await db.collection('graves').doc(id).get()
+      let data = null
+
+      if (familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'graves',
+            familyId: familyId,
+            limit: 100
+          }
+        })
+
+        if (result.result && result.result.success && result.result.data) {
+          data = result.result.data.find(g => g._id === id)
+        }
+      } else {
+        const res = await db.collection('graves').doc(id).get()
+        data = res.data
+      }
 
       if (data) {
-        const photos = await this.convertImagesToTempUrls(data.photos || [])
+        const photos = await this.convertImagesToTempUrls((data.photos || []).slice())
 
         let member = null
         if (data.memberId) {
-          try {
-            const memberRes = await db.collection('members').doc(data.memberId).get()
-            member = memberRes.data
-          } catch (e) {
-            console.error('load member error:', e)
-          }
+          await this.loadMember(data.memberId, familyId)
+          member = this.data.selectedMember
         }
 
         this.setData({
@@ -102,7 +139,7 @@ Page({
     if (!images || images.length === 0) return []
 
     const cloudImages = images.filter(img => img && !img.startsWith('http'))
-    if (cloudImages.length === 0) return images
+    if (cloudImages.length === 0) return [...images]
 
     try {
       const res = await wx.cloud.getTempFileURL({ fileList: cloudImages })
@@ -120,23 +157,10 @@ Page({
       console.error('convertImagesToTempUrls error:', e)
     }
 
-    return images
+    return [...images]
   },
 
-  async loadAllMembers() {
-    const membersCache = wx.getStorageSync(CACHE_KEY) || []
-    const cachedVersion = wx.getStorageSync(VERSION_KEY)
-    const app = getApp()
-    const currentVersion = app.globalData.membersVersion || 0
-
-    if (membersCache.length > 0 && cachedVersion === currentVersion) {
-      this.setData({
-        members: membersCache,
-        filteredMembers: membersCache
-      })
-      return
-    }
-
+  async loadAllMembers(familyId) {
     const db = wx.cloud.database()
     try {
       let allMembers = []
@@ -144,22 +168,45 @@ Page({
       let hasMore = true
 
       while (hasMore) {
-        const { data } = await db.collection('members')
-          .orderBy('generation', 'asc')
-          .skip(skip)
-          .limit(20)
-          .get()
+        if (familyId) {
+          try {
+            const result = await wx.cloud.callFunction({
+              name: 'quickstartFunctions',
+              data: {
+                type: 'familyDataQuery',
+                collection: 'members',
+                familyId: familyId,
+                orderBy: { field: 'generation', order: 'asc' },
+                skip: skip,
+                limit: 20
+              }
+            })
 
-        if (data.length > 0) {
-          allMembers = [...allMembers, ...data]
-          skip += 20
+            if (result.result && result.result.success && result.result.data) {
+              allMembers = [...allMembers, ...result.result.data]
+              hasMore = result.result.data.length === 20
+            } else {
+              hasMore = false
+            }
+          } catch (e) {
+            console.error('loadAllMembers cloud function error:', e)
+            hasMore = false
+          }
+        } else {
+          const { data } = await db.collection('members')
+            .orderBy('generation', 'asc')
+            .skip(skip)
+            .limit(20)
+            .get()
+
+          if (data.length > 0) {
+            allMembers = [...allMembers, ...data]
+          }
+          hasMore = data.length === 20
         }
 
-        hasMore = data.length === 20
+        skip += 20
       }
-
-      wx.setStorageSync(CACHE_KEY, allMembers)
-      wx.setStorageSync(VERSION_KEY, currentVersion)
 
       this.setData({
         members: allMembers,
@@ -199,13 +246,22 @@ Page({
   },
 
   onMemberSelect(e) {
-    const { id, name } = e.currentTarget.dataset
-    const { members } = this.data
-    const member = members.find(m => m._id === id)
+    const { id } = e.currentTarget.dataset
+    const member = this.data.members.find(m => m._id === id)
 
     this.setData({
       selectedMemberId: id,
-      selectedMember: member || null,
+      selectedMember: member,
+      showMemberModal: false
+    })
+  },
+
+  onConfirmMember() {
+    const member = this.data.members.find(m => m._id === this.data.tempSelectedId)
+
+    this.setData({
+      selectedMemberId: this.data.tempSelectedId,
+      selectedMember: member,
       showMemberModal: false
     })
   },
@@ -221,16 +277,20 @@ Page({
     })
   },
 
+  onCancel() {
+    wx.navigateBack()
+  },
+
+  onTypeChange(e) {
+    this.setData({ graveType: e.detail.value })
+  },
+
   onTypeSelect(e) {
     this.setData({ graveType: e.currentTarget.dataset.value })
   },
 
   onLocationInput(e) {
     this.setData({ location: e.detail.value })
-  },
-
-  onDescriptionInput(e) {
-    this.setData({ description: e.detail.value })
   },
 
   onGetWGS84Location() {
@@ -246,7 +306,7 @@ Page({
         if (!this.data.location) {
           this.setData({ location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })
         }
-        
+
         let accuracyLevel = ''
         let accuracyDesc = ''
         if (accuracy < 10) {
@@ -259,7 +319,7 @@ Page({
           accuracyLevel = '一般'
           accuracyDesc = '精度较低，可到室外空旷处重新获取'
         }
-        
+
         wx.showModal({
           title: `位置获取成功 (精度:${accuracy.toFixed(0)}m)`,
           content: `评价：${accuracyLevel}\n\n${accuracyDesc}\n\n如需更高精度，建议使用专业测量软件测量后手动填入经纬度。`,
@@ -305,6 +365,10 @@ Page({
 
   onLongitudeInput(e) {
     this.setData({ longitude: e.detail.value })
+  },
+
+  onDescriptionInput(e) {
+    this.setData({ description: e.detail.value })
   },
 
   onAddPhoto() {
@@ -390,10 +454,8 @@ Page({
 
     this.setData({ loading: true })
 
+    const app = getApp()
     try {
-      const db = wx.cloud.database()
-      const now = db.serverDate()
-
       const dataToSave = {
         memberId: selectedMemberId,
         graveType,
@@ -401,24 +463,34 @@ Page({
         latitude: parseFloat(latitude) || 0,
         longitude: parseFloat(longitude) || 0,
         description,
-        photos,
-        updateTime: now
+        photos
       }
 
       if (isEdit) {
-        await db.collection('graves').doc(id).update({
-          data: dataToSave
+        await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataUpdate',
+            collection: 'graves',
+            familyId: app.globalData.familyId,
+            recordId: id,
+            data: dataToSave
+          }
         })
       } else {
-        dataToSave.createTime = now
-        dataToSave.visitCount = 0
-        await db.collection('graves').add({
-          data: dataToSave
+        await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataAdd',
+            collection: 'graves',
+            familyId: app.globalData.familyId,
+            data: { ...dataToSave, visitCount: 0 }
+          }
         })
       }
 
-      const app = getApp()
       app.globalData.gravesVersion = (app.globalData.gravesVersion || 0) + 1
+      cacheManager.invalidate(cacheManager.keys.graves)
 
       wx.showToast({ title: '保存成功' })
       setTimeout(() => {

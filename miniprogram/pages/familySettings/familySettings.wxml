@@ -1,0 +1,77 @@
+<view class="page">
+  <view class="section" wx:if="{{family}}">
+    <view class="section-title">基本信息</view>
+    <view class="menu-card" bindtap="onEditName">
+      <view class="menu-card-left">
+        <text class="menu-icon">📝</text>
+        <view class="menu-content">
+          <text class="menu-title">
+            家族名称
+            <text class="default-badge" wx:if="{{isDefault}}">默认</text>
+          </text>
+          <text class="menu-desc">{{family.name}}</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{family}}">
+    <view class="section-title">邀请码</view>
+    <view class="invite-card">
+      <view class="invite-code-box">
+        <text class="invite-code">{{family.inviteCode}}</text>
+      </view>
+      <view class="invite-actions">
+        <button class="invite-btn" bindtap="onCopyInviteCode">复制邀请码</button>
+        <button class="invite-btn" bindtap="onRegenerateInviteCode" wx:if="{{myRole === 'owner'}}">重新生成</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{family && myRole === 'owner'}}">
+    <view class="section-title">族长特权</view>
+    <view class="menu-card" bindtap="onTransferOwner">
+      <view class="menu-card-left">
+        <text class="menu-icon">👑</text>
+        <view class="menu-content">
+          <text class="menu-title">转让族长</text>
+          <text class="menu-desc">将族长权限转让给其他成员</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-card danger" bindtap="onDisbandFamily" wx:if="{{!isDefault}}">
+      <view class="menu-card-left">
+        <text class="menu-icon">🗑️</text>
+        <view class="menu-content">
+          <text class="menu-title">解散家族</text>
+          <text class="menu-desc">删除家族及所有成员关系</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{family && myRole === 'admin'}}">
+    <view class="section-title">管理员功能</view>
+    <view class="menu-card">
+      <view class="menu-card-left">
+        <text class="menu-icon">⚡</text>
+        <view class="menu-content">
+          <text class="menu-title">管理员权限</text>
+          <text class="menu-desc">可添加/移除成员，设置成员角色</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="leave-section" wx:if="{{family && myRole !== 'owner' && !isDefault}}">
+    <button class="leave-btn" bindtap="onLeaveFamily">退出家族</button>
+  </view>
+
+  <view class="loading-view" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+</view>

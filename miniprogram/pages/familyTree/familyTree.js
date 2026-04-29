@@ -1,3 +1,5 @@
+const cacheManager = require('../../utils/cacheManager.js')
+
 Page({
   data: {
     members: [],
@@ -29,67 +31,94 @@ Page({
   },
 
   onShow() {
-    const app = getApp()
-    const versionKey = 'familyTree_version'
-    const cachedVersion = wx.getStorageSync(versionKey)
-    const currentVersion = app.globalData.membersVersion
-    
-    if (currentVersion !== cachedVersion) {
-      this.loadMembers(true)
-    }
+    this.loadMembers(true)
+  },
+
+  onPullDownRefresh() {
+    cacheManager.invalidate(cacheManager.keys.members)
+    this.loadMembers(true).then(() => {
+      wx.stopPullDownRefresh()
+    })
   },
 
   async loadMembers(reset = false) {
     if (this.data.loading) return
-    
-    const cacheKey = 'familyTree_members'
-    const versionKey = 'familyTree_version'
+
     const app = getApp()
-    
+    const familyId = app.globalData.familyId
+
     if (reset) {
-      const cached = wx.getStorageSync(cacheKey)
-      const cachedVersion = wx.getStorageSync(versionKey)
-      const currentVersion = app.globalData.membersVersion
-      
-      if (cached && cached.length > 0 && cachedVersion === currentVersion && currentVersion > 0) {
+      const { data: cached, version: cachedVersion } = cacheManager.get(cacheManager.keys.members, familyId)
+      const localVersion = app.globalData.membersVersion
+
+      if (cached && cached.length > 0 && cachedVersion === localVersion) {
         this.processMembersData(cached, false)
-        return
-      } else if (cached && cached.length > 0 && currentVersion === 0) {
-        this.processMembersData(cached, true)
         return
       }
     }
-    
+
     this.setData({ loading: true })
-    
-    const db = wx.cloud.database()
-    
+
     let allMembers = []
     let skip = 0
     let hasMore = true
-    
+    let cloudVersion = 0
+
     while (hasMore) {
-      const { data } = await db.collection('members')
-        .orderBy('generation', 'asc')
-        .skip(skip)
-        .limit(20)
-        .get()
-      
-      if (data.length > 0) {
-        allMembers = [...allMembers, ...data]
-        skip += 20
+      if (familyId) {
+        try {
+          const result = await wx.cloud.callFunction({
+            name: 'quickstartFunctions',
+            data: {
+              type: 'familyDataQuery',
+              collection: 'members',
+              familyId: familyId,
+              orderBy: { field: 'generation', order: 'asc' },
+              skip: skip,
+              limit: 20
+            }
+          })
+
+          console.log('loadMembers page:', { skip, count: result.result?.data?.length || 0, total: result.result?.total })
+          if (result.result && result.result.success && result.result.data) {
+            cloudVersion = result.result.membersVersion || 0
+            allMembers = [...allMembers, ...result.result.data]
+            hasMore = result.result.data.length === 20
+          } else {
+            hasMore = false
+          }
+        } catch (e) {
+          console.error('loadMembers cloud function error:', e)
+          hasMore = false
+        }
+      } else {
+        try {
+          const db = wx.cloud.database()
+          const { data } = await db.collection('members')
+            .orderBy('generation', 'asc')
+            .skip(skip)
+            .limit(20)
+            .get()
+
+          allMembers = [...allMembers, ...data]
+          hasMore = data.length === 20
+        } catch (e) {
+          console.error('loadMembers db error:', e)
+          hasMore = false
+        }
       }
-      
-      hasMore = data.length === 20
+
+      skip += 20
     }
-    
-    wx.setStorageSync(cacheKey, allMembers)
-    wx.setStorageSync(versionKey, app.globalData.membersVersion)
-    
+
+    app.globalData.membersVersion = cloudVersion
+    cacheManager.set(cacheManager.keys.members, familyId, allMembers, cloudVersion)
+
     this.processMembersData(allMembers, true)
   },
 
   processMembersData(members, updatePosition = false) {
+    console.log('processMembersData: total members =', members.length)
     const rootCandidates = members.filter(m => !m.fatherId)
       .sort((a, b) => {
         const hasRelationsA = (a.spouses && a.spouses.length > 0) || members.some(m => m.fatherId === a._id || m.motherId === a._id)
@@ -98,9 +127,9 @@ Page({
         if (!hasRelationsA && hasRelationsB) return 1
         return (a.generation || 1) - (b.generation || 1)
       })
-    
+
     const branches = this.calculateBranches(members)
-    
+
     let rootId = this.data.rootId
     if (!rootId || updatePosition) {
       if (rootCandidates.length > 0) {
@@ -109,23 +138,25 @@ Page({
       } else if (members.length > 0) {
         rootId = members[0]._id
         this.initialRootId = rootId
+      } else {
+        this.initialRootId = ''
       }
     }
 
     const setDataObj = {
       members: members,
-      rootId,
-      initialRootId: this.initialRootId,
+      rootId: rootId || '',
+      initialRootId: this.initialRootId || '',
       loading: false,
       branchOptions: branches
     }
-    
+
     if (updatePosition) {
       setDataObj.scale = 1
       setDataObj.scrollX = 0
       setDataObj.scrollY = 0
     }
-    
+
     this.setData(setDataObj)
     this.getFilteredMembers()
     setTimeout(() => {
@@ -136,14 +167,13 @@ Page({
     }, 300)
   },
 
-  // 测量族谱树实际渲染尺寸，动态撑开 movable-view
   measureTreeSize() {
     const query = wx.createSelectorQuery()
     query.select('.movable-view .tree-root').boundingClientRect()
     query.exec((res) => {
       if (!res[0]) return
       const { width, height } = res[0]
-      const padding = 200 // 四周留白，单位 px
+      const padding = 200
       const newWidth = Math.max(width + padding * 2, this.windowWidth * 3)
       const newHeight = Math.max(height + padding * 2, this.windowHeight * 3)
       this.setData({
@@ -154,117 +184,150 @@ Page({
   },
 
   calculateBranches(members) {
-    const memberMap = {}
-    members.forEach(m => {
-      memberMap[m._id] = m
-    })
-    
-    const rootMembers = members.filter(m => !m.fatherId && m.gender === '男')
-    
     const branches = []
-    rootMembers.forEach(root => {
-      const branchName = root.name || '始祖'
-      branches.push({
-        id: root._id,
-        name: branchName + '支'
+    const generationMap = {}
+
+    members.forEach(m => {
+      const gen = m.generation || 1
+      if (!generationMap[gen]) {
+        generationMap[gen] = []
+      }
+      generationMap[gen].push(m)
+    })
+
+    Object.keys(generationMap).sort((a, b) => a - b).forEach(gen => {
+      const genMembers = generationMap[gen]
+      genMembers.forEach(m => {
+        if (gen === '1' && m.gender === '男') {
+          branches.push({
+            id: m._id,
+            name: m.name,
+            generation: m.generation
+          })
+        }
       })
     })
-    
-    if (branches.length === 0) {
-      branches.push({
-        id: '',
-        name: '始祖支脉'
-      })
-    }
-    
+
+    console.log('calculateBranches: branches count =', branches.length, branches)
     return branches
+  },
+
+  onSwitchBranch(e) {
+    const index = e.currentTarget.dataset.index
+    const branch = this.data.branchOptions[index]
+    if (branch) {
+      this.setData({
+        selectedBranchIndex: index,
+        selectedBranchId: branch.id
+      })
+      this.scrollToNode(branch.id)
+    }
+  },
+
+  scrollToNode(nodeId) {
+    const query = wx.createSelectorQuery()
+    query.select(`.tree-inner >>> #node-${nodeId}`).boundingClientRect()
+    query.select('.tree-inner').boundingClientRect()
+    query.select('.tree-scroll').boundingClientRect()
+    query.exec((res) => {
+      if (!res[0] || !res[1] || !res[2]) {
+        console.error('scrollToNode: 未找到节点', nodeId, res)
+        return
+      }
+      const nodeRect = res[0]
+      const innerRect = res[1]
+      const viewRect = res[2]
+      const nodeLeft = nodeRect.left - innerRect.left
+      const nodeTop = nodeRect.top - innerRect.top
+      const targetX = nodeLeft - viewRect.width / 2 + nodeRect.width / 2
+      const targetY = nodeTop - viewRect.height / 2 + nodeRect.height / 2
+      this.setData({
+        scrollX: targetX,
+        scrollY: targetY
+      })
+    })
+  },
+
+  onSearch(e) {
+    const searchKey = e.detail.value.trim()
+    this.setData({ searchKey })
+    this.getFilteredMembers()
+  },
+
+  onFilterGender(e) {
+    const filterGender = e.currentTarget.dataset.gender
+    this.setData({ filterGender: this.data.filterGender === filterGender ? '' : filterGender })
+    this.getFilteredMembers()
+  },
+
+  getFilteredMembers() {
+    const { members, searchKey, filterGender } = this.data
+
+    let filtered = members
+
+    if (searchKey) {
+      const key = searchKey.toLowerCase()
+      filtered = filtered.filter(m =>
+        (m.name && m.name.toLowerCase().includes(key)) ||
+        (m.bio && m.bio.toLowerCase().includes(key)) ||
+        (m.rankTitle && m.rankTitle.toLowerCase().includes(key))
+      )
+    }
+
+    if (filterGender) {
+      filtered = filtered.filter(m => m.gender === filterGender)
+    }
+
+    this.setData({ displayMembers: filtered })
+  },
+
+  onSearchResultTap(e) {
+    const id = e.currentTarget.dataset.id
+    if (id) {
+      this.scrollToNode(id)
+      this.setData({ searchKey: '' })
+    }
   },
 
   onBranchChange(e) {
     const index = e.detail.value
     const branch = this.data.branchOptions[index]
-    
     if (branch) {
       this.setData({
         selectedBranchIndex: index,
         selectedBranchId: branch.id,
-        rootId: branch.id,
-        searchKey: '',
-        scale: 1,
-        scrollX: 0,
-        scrollY: 0
+        rootId: branch.id
       })
-      
       setTimeout(() => {
-        this.measureTreeSize()
-        setTimeout(() => {
-          this.scrollToNode(branch.id)
-        }, 200)
-      }, 450)
+        this.scrollToNode(branch.id)
+      }, 100)
+    }
+  },
+
+  onNodeTap(e) {
+    const { id } = e.detail
+    if (id) {
+      wx.navigateTo({
+        url: `/pages/memberEdit/memberEdit?id=${id}`
+      })
     }
   },
 
   onResetRoot() {
-    if (this.initialRootId) {
+    const { initialRootId } = this.data
+    if (initialRootId) {
       this.setData({
-        rootId: this.initialRootId,
+        rootId: initialRootId,
         searchKey: '',
-        scrollX: 0,
-        scrollY: 0,
         scale: 1
       })
+      this.getFilteredMembers()
       setTimeout(() => {
-        this.scrollToNode(this.initialRootId)
-      }, 500)
+        this.scrollToNode(initialRootId)
+      }, 100)
+    } else {
+      wx.showToast({ title: '无根节点可恢复', icon: 'none' })
     }
-  },
-
-  onScroll(e) {
-    this.data.scrollX = e.detail.scrollLeft
-    this.data.scrollY = e.detail.scrollTop
-  },
-
-  getViewCenter() {
-    return {
-      x: this.data.scrollX + this.windowWidth / 2,
-      y: this.data.scrollY + this.windowHeight / 2
-    }
-  },
-
-  onZoomIn() {
-    const newScale = Math.min(3, this.data.scale + 0.2)
-    const center = this.getViewCenter()
-    this.setData({
-      scale: newScale,
-      scaleOriginX: center.x,
-      scaleOriginY: center.y
-    })
-  },
-
-  onZoomOut() {
-    const newScale = Math.max(0.3, this.data.scale - 0.2)
-    const center = this.getViewCenter()
-    this.setData({
-      scale: newScale,
-      scaleOriginX: center.x,
-      scaleOriginY: center.y
-    })
-  },
-
-  onResetZoom() {
-    const center = this.getViewCenter()
-    this.setData({
-      scale: 1,
-      scaleOriginX: center.x,
-      scaleOriginY: center.y
-    })
-  },
-
-  onNodeTap(e) {
-    const { id, generation } = e.detail
-    wx.navigateTo({
-      url: `/pages/memberEdit/memberEdit?id=${id}&generation=${generation}`
-    })
   },
 
   onAddMember() {
@@ -273,105 +336,165 @@ Page({
     })
   },
 
-  onSearch(e) {
-    this.setData({ searchKey: e.detail.value })
-    this.getFilteredMembers()
+  onZoomIn() {
+    let scale = this.data.scale + 0.1
+    if (scale > 2) scale = 2
+    this.setData({ scale })
   },
 
-  async onSearchResultTap(e) {
+  onZoomOut() {
+    let scale = this.data.scale - 0.1
+    if (scale < 0.3) scale = 0.3
+    this.setData({ scale })
+  },
+
+  onScroll(e) {
+  },
+
+  onMemberTap(e) {
     const { id } = e.currentTarget.dataset
-    
-    const ultimateRootId = this.findUltimateRootId(id)
-    
+    wx.navigateTo({
+      url: `/pages/memberEdit/memberEdit?id=${id}`
+    })
+  },
+
+  onTreeBindchange(e) {
+    const { x, y } = e.detail
     this.setData({
-      searchKey: '',
-      rootId: ultimateRootId,
-      scale: 1
+      scrollX: x,
+      scrollY: y
     })
-    
-    // 增加延迟，确保 rootId 切换后的族谱树完全渲染，然后重新测量尺寸
-    setTimeout(() => {
-      this.measureTreeSize()
-      setTimeout(() => {
-        this.scrollToNode(id)
-      }, 200)
-    }, 450)
   },
 
-  // 向上追溯寻找顶级祖先
-  findUltimateRootId(memberId) {
-    const { members } = this.data
-    const memberMap = {}
-    members.forEach(m => {
-      memberMap[m._id] = m
+  onTreeScaleChange(e) {
+    let scale = e.detail.scale
+    if (scale < 0.3) scale = 0.3
+    if (scale > 2) scale = 2
+    this.setData({ scale })
+  },
+
+  onResetView() {
+    this.setData({
+      scale: 1,
+      scrollX: 0,
+      scrollY: 0
     })
-    
-    let current = memberMap[memberId]
-    if (!current) return memberId
-    
-    const visited = new Set()
-    while (current && (current.fatherId || current.motherId)) {
-      if (visited.has(current._id)) break
-      visited.add(current._id)
-      
-      const parentId = current.fatherId || current.motherId
-      if (memberMap[parentId]) {
-        current = memberMap[parentId]
-      } else {
-        break
-      }
+    if (this.data.rootId) {
+      this.scrollToNode(this.data.rootId)
     }
-    return current ? current._id : memberId
   },
 
-  scrollToNode(nodeId, isSilent = false) {
+  getMemberPosition(memberId) {
     const query = wx.createSelectorQuery()
-    
-    query.select(`.tree-inner >>> #node-${nodeId}`).boundingClientRect()
-    query.select('.tree-inner').boundingClientRect()
-    query.select('.tree-scroll').boundingClientRect()
-    
-    query.exec((res) => {
-      if (!res[0]) {
-        if (!isSilent) {
-          console.error('定位失败：未找到目标节点', nodeId)
+    return new Promise((resolve) => {
+      query.select(`#member-${memberId}`).boundingClientRect()
+      query.exec((res) => {
+        if (res[0]) {
+          resolve({
+            x: res[0].left + res[0].width / 2,
+            y: res[0].top + res[0].height / 2
+          })
+        } else {
+          resolve(null)
         }
-        return
-      }
-      
-      if (!res[1] || !res[2]) return
-      
-      const nodeRect = res[0]
-      const innerRect = res[1]
-      const scrollRect = res[2]
-      
-      const nodeLeft = nodeRect.left - innerRect.left
-      const nodeTop = nodeRect.top - innerRect.top
-      
-      const targetX = nodeLeft - (scrollRect.width / 2) + (nodeRect.width / 2)
-      const targetY = nodeTop - (scrollRect.height / 2) + (nodeRect.height / 2)
-      
-      this.setData({
-        scrollX: Math.max(0, targetX),
-        scrollY: Math.max(0, targetY)
       })
     })
   },
 
-  onFilterGender(e) {
-    this.setData({ filterGender: e.currentTarget.dataset.gender })
-    this.getFilteredMembers()
+  calculatePositions(members, rootId) {
+    if (!members || members.length === 0) return {}
+
+    const positions = {}
+    const padding = 60
+    const horizontalSpacing = 160
+    const verticalSpacing = 180
+
+    const generationMap = {}
+    members.forEach(m => {
+      const gen = m.generation || 1
+      if (!generationMap[gen]) {
+        generationMap[gen] = []
+      }
+      generationMap[gen].push(m)
+    })
+
+    const generations = Object.keys(generationMap).sort((a, b) => a - b)
+
+    generations.forEach((gen, genIndex) => {
+      const genMembers = generationMap[gen]
+      genMembers.forEach((member, index) => {
+        const x = 2500 + (index - genMembers.length / 2) * horizontalSpacing + genIndex * 50
+        const y = 2500 + genIndex * verticalSpacing
+        positions[member._id] = { x, y }
+      })
+    })
+
+    return positions
   },
 
-  getFilteredMembers() {
-    let { members, searchKey, filterGender } = this.data
-    const key = (searchKey || '').trim().toLowerCase()
-    const filtered = members.filter(m => {
-      const name = (m.name || '').trim().toLowerCase()
-      const matchSearch = !key || name.includes(key)
-      const matchGender = !filterGender || m.gender === filterGender
-      return matchSearch && matchGender
+  generateTreeData() {
+    const { members, rootId, scale, scrollX, scrollY } = this.data
+    if (!members || members.length === 0) {
+      return { nodes: [], links: [] }
+    }
+
+    const positions = this.calculatePositions(members, rootId)
+    const nodeMap = new Map()
+    const nodes = []
+    const links = []
+
+    members.forEach(member => {
+      const pos = positions[member._id] || { x: 2500, y: 2500 }
+      const node = {
+        id: member._id,
+        name: member.name,
+        avatar: member.avatar || '',
+        gender: member.gender || 'male',
+        generation: member.generation || 1,
+        x: pos.x,
+        y: pos.y,
+        fatherId: member.fatherId,
+        motherId: member.motherId,
+        spouses: member.spouses || []
+      }
+      nodes.push(node)
+      nodeMap.set(member._id, node)
     })
-    this.setData({ displayMembers: filtered })
+
+    nodes.forEach(node => {
+      if (node.fatherId && nodeMap.has(node.fatherId)) {
+        links.push({
+          source: node.fatherId,
+          target: node.id,
+          type: 'father-child'
+        })
+      }
+      if (node.motherId && nodeMap.has(node.motherId)) {
+        links.push({
+          source: node.motherId,
+          target: node.id,
+          type: 'mother-child'
+        })
+      }
+      node.spouses.forEach(spouseId => {
+        if (nodeMap.has(spouseId)) {
+          links.push({
+            source: node.id,
+            target: spouseId,
+            type: 'spouse'
+          })
+        }
+      })
+    })
+
+    return { nodes, links }
+  },
+
+  renderTree() {
+    const { nodes, links } = this.generateTreeData()
+    this.setData({
+      treeNodes: nodes,
+      treeLinks: links
+    })
   }
 })

@@ -78,8 +78,6 @@
     <view class="fab-btn zoom-out" bindtap="onZoomOut">
       <text class="fab-icon">−</text>
     </view>
-    <view class="fab-btn reset-zoom" bindtap="onResetZoom">
-      <image class="fab-icon" src="/images/icons/reset.svg" mode="aspectFit"/>
-    </view>
+
   </view>
 </view>

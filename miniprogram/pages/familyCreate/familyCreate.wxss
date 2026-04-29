@@ -1,0 +1,111 @@
+.page {
+  min-height: 100vh;
+  background: #F8F6F3;
+  padding: 32rpx;
+}
+
+.form-section {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 16rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  background: #F8F6F3;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  font-size: 32rpx;
+  box-sizing: border-box;
+}
+
+.form-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+  margin-top: 12rpx;
+}
+
+.tip-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 48rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.tip-icon {
+  font-size: 40rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.tip-content {
+  flex: 1;
+}
+
+.tip-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.tip-text {
+  display: block;
+  font-size: 26rpx;
+  color: #666666;
+  line-height: 1.6;
+}
+
+.btn-section {
+  margin-top: 40rpx;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 96rpx;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  border-radius: 48rpx;
+  color: #FFFFFF;
+  font-size: 34rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(139, 69, 19, 0.3);
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.submit-btn[disabled] {
+  background: #CCCCCC;
+  box-shadow: none;
+}

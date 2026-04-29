@@ -37,11 +37,6 @@
     </view>
 
     <view class="form-item">
-      <text class="label">代数</text>
-      <view class="display-text">{{generation}}世</view>
-    </view>
-
-    <view class="form-item">
       <text class="label">出生年份</text>
       <input 
         class="input" 

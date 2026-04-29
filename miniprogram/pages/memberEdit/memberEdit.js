@@ -1,5 +1,4 @@
-const CACHE_KEY = 'member_members'
-const VERSION_KEY = 'member_version'
+const cacheManager = require('../../utils/cacheManager.js')
 
 Page({
   data: {
@@ -43,40 +42,28 @@ Page({
   },
 
   onLoad(options) {
-    const membersCache = wx.getStorageSync(CACHE_KEY) || []
-    const cachedVersion = wx.getStorageSync(VERSION_KEY) || 0
     const app = getApp()
-    const currentVersion = app.globalData.membersVersion || 0
-    
+    const familyId = app.globalData.familyId
+
     if (options.id) {
       this.setData({ id: options.id, isEdit: true })
-      
-      const cachedMember = membersCache.find(m => m._id === options.id)
-      if (cachedMember && cachedVersion === currentVersion) {
-        this.loadFromCache(cachedMember, options.generation)
-      } else {
-        this.loadMember(options.id, options.generation)
-      }
+      this.loadMember(options.id, options.generation, familyId)
     } else {
       const generation = parseInt(options.generation) || 1
       this.setData({ generation })
-      if (membersCache.length > 0 && cachedVersion === currentVersion) {
-        this.loadAllMembersFromCache()
-      } else {
-        this.loadAllMembers()
-      }
+      this.loadAllMembers(null, null, familyId)
     }
   },
 
   async convertAvatarToTempUrl(avatarPath) {
     if (!avatarPath) return ''
     if (avatarPath.startsWith('http')) return avatarPath
-    
+
     try {
       const res = await wx.cloud.getTempFileURL({
         fileList: [avatarPath]
       })
-      
+
       if (res.fileList && res.fileList[0]) {
         const fileInfo = res.fileList[0]
         if (fileInfo.tempFileURL) {
@@ -89,118 +76,45 @@ Page({
     } catch (e) {
       console.error('convertAvatarToTempUrl error:', e)
     }
-    
+
     if (avatarPath.startsWith('cloud://')) {
       return avatarPath
     }
     return ''
   },
 
-  async loadFromCache(data, generationFromTree) {
-    const membersCache = wx.getStorageSync(CACHE_KEY) || []
-    
-    const getMemberName = (memberId) => {
-      if (!memberId) return ''
-      const member = membersCache.find(m => m._id === memberId)
-      return member ? member.name : ''
-    }
-    
-    const spouseNames = []
-    if (data.spouses && Array.isArray(data.spouses)) {
-      for (const spouseId of data.spouses) {
-        if (typeof spouseId === 'string' && spouseId.length > 0) {
-          const name = getMemberName(spouseId)
-          if (name) spouseNames.push(name)
-        }
-      }
-    }
-    
-    const fatherName = getMemberName(data.fatherId)
-    const motherName = getMemberName(data.motherId)
-    
-    const avatarTempUrl = await this.convertAvatarToTempUrl(data.avatar)
-    const displayAvatar = avatarTempUrl || data.avatar || ''
-    
-    const updateData = {
-      name: data.name || '',
-      gender: data.gender || '男',
-      generation: generationFromTree ? parseInt(generationFromTree) : (data.generation || 1),
-      birthYear: data.birthYear || '',
-      deathYear: data.deathYear || '',
-      spouses: data.spouses || [],
-      originalSpouses: data.spouses || [],
-      spouseNames: spouseNames.join('、'),
-      fatherId: data.fatherId || '',
-      motherId: data.motherId || '',
-      fatherName: fatherName,
-      motherName: motherName,
-      rankTitle: data.rankTitle || '',
-      bio: data.bio || '',
-      avatar: displayAvatar,
-      avatarCloudPath: data.avatar || ''
-    }
-    this.setData(updateData)
-    this.loadAllMembersFromCache(data._id, updateData.gender)
-    this.checkGrave(data._id)
-  },
-
-  loadAllMembersFromCache(currentId, currentGender) {
-    const membersCache = wx.getStorageSync(CACHE_KEY) || []
-    const data = membersCache
-    
-    const id = currentId || this.data.id
-    const gender = currentGender || this.data.gender
-    const { fatherId, motherId } = this.data
-    
-    const fatherOptions = data.filter(m => {
-      if (id && m._id === id) return false
-      return (m.gender || '').trim() === '男'
-    })
-    
-    const motherOptions = data.filter(m => {
-      if (id && m._id === id) return false
-      return (m.gender || '').trim() === '女'
-    })
-    
-    const spouseOptions = data.filter(m => {
-      if (id && m._id === id) return false
-      const mGender = (m.gender || '').trim()
-      const targetGender = (gender || '').trim()
-      if (mGender === targetGender) return false
-      const hasSpouses = m.spouses && Array.isArray(m.spouses) && m.spouses.length > 0
-      const isCurrentSpouse = id && m.spouses && Array.isArray(m.spouses) && m.spouses.includes(id)
-      const allowMarriedMaleForFemale = targetGender === '女' && mGender === '男'
-      return !hasSpouses || isCurrentSpouse || allowMarriedMaleForFemale
-    })
-    
-    const fatherIndex = fatherId ? fatherOptions.findIndex(m => m._id === fatherId) : -1
-    const motherIndex = motherId ? motherOptions.findIndex(m => m._id === motherId) : -1
-    
-    this.setData({ 
-      members: data,
-      fatherOptions,
-      motherOptions,
-      spouseOptions: spouseOptions,
-      fatherIndex,
-      motherIndex
-    })
-  },
-
-  async loadMember(id, generationFromTree) {
+  async loadMember(id, generationFromTree, familyId) {
     wx.showLoading({ title: '加载中...' })
     try {
       const db = wx.cloud.database()
-      const { data } = await db.collection('members').doc(id).get()
-      
+      let data = null
+
+      if (familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'members',
+            familyId: familyId,
+            limit: 100
+          }
+        })
+
+        if (result.result && result.result.success && result.result.data) {
+          data = result.result.data.find(m => m._id === id)
+        }
+      } else {
+        const res = await db.collection('members').doc(id).get()
+        data = res.data
+      }
+
       if (data) {
-        const membersCache = wx.getStorageSync(CACHE_KEY) || []
-        
         const getMemberName = (memberId) => {
           if (!memberId) return ''
-          const member = membersCache.find(m => m._id === memberId)
+          const member = this.data.members.find(m => m._id === memberId)
           return member ? member.name : ''
         }
-        
+
         const spouseNames = []
         if (data.spouses && Array.isArray(data.spouses)) {
           for (const spouseId of data.spouses) {
@@ -210,13 +124,13 @@ Page({
             }
           }
         }
-        
+
         const fatherName = getMemberName(data.fatherId)
         const motherName = getMemberName(data.motherId)
-        
+
         const avatarTempUrl = await this.convertAvatarToTempUrl(data.avatar)
         const displayAvatar = avatarTempUrl || data.avatar || ''
-        
+
         const updateData = {
           name: data.name || '',
           gender: data.gender || '男',
@@ -236,10 +150,10 @@ Page({
           avatarCloudPath: data.avatar || ''
         }
         this.setData(updateData)
-        await this.loadAllMembers(id, updateData.gender)
+        await this.loadAllMembers(id, updateData.gender, familyId)
         this.checkGrave(id)
       } else {
-        await this.loadAllMembers()
+        await this.loadAllMembers(null, null, familyId)
       }
     } catch (e) {
       console.error('Load member error:', e)
@@ -249,67 +163,90 @@ Page({
     }
   },
 
-  async loadAllMembers(currentId, currentGender) {
+  async loadAllMembers(currentId, currentGender, familyId) {
     const db = wx.cloud.database()
-    
+
     let allMembers = []
     let skip = 0
     let hasMore = true
-    
+
     while (hasMore) {
-      const { data } = await db.collection('members')
-        .orderBy('updateTime', 'desc')
-        .skip(skip)
-        .limit(20)
-        .get()
-      
-      if (data.length > 0) {
-        allMembers = [...allMembers, ...data]
-        skip += 20
+      if (familyId) {
+        try {
+          const result = await wx.cloud.callFunction({
+            name: 'quickstartFunctions',
+            data: {
+              type: 'familyDataQuery',
+              collection: 'members',
+              familyId: familyId,
+              orderBy: { field: 'generation', order: 'asc' },
+              skip: skip,
+              limit: 20
+            }
+          })
+
+          if (result.result && result.result.success && result.result.data) {
+            allMembers = [...allMembers, ...result.result.data]
+            hasMore = result.result.data.length === 20
+          } else {
+            hasMore = false
+          }
+        } catch (e) {
+          console.error('loadAllMembers cloud function error:', e)
+          hasMore = false
+        }
+      } else {
+        const { data } = await db.collection('members')
+          .orderBy('generation', 'asc')
+          .skip(skip)
+          .limit(20)
+          .get()
+
+        if (data.length > 0) {
+          allMembers = [...allMembers, ...data]
+        }
+        hasMore = data.length === 20
       }
-      
-      hasMore = data.length === 20
+
+      skip += 20
     }
-    
+
     const data = allMembers
-    
+
     const id = currentId || this.data.id
     const gender = currentGender || this.data.gender
     const { fatherId, motherId } = this.data
-    
+
     const fatherOptions = data.filter(m => {
       if (id && m._id === id) return false
       return (m.gender || '').trim() === '男'
     })
-    
+
     const motherOptions = data.filter(m => {
       if (id && m._id === id) return false
       return (m.gender || '').trim() === '女'
     })
-    
+
     const spouseOptions = data.filter(m => {
-      // 1. 不能是自己
       if (id && m._id === id) return false
-      
-      // 2. 性别必须不一致 (鲁棒性处理：去除空格，默认男)
+
       const mGender = (m.gender || '').trim()
       const targetGender = (gender || '').trim()
       if (mGender === targetGender) return false
-      
-      // 3. 状态过滤
-      // - 默认：未婚 或 已经是当前成员的配偶
-      // - 特殊：当前编辑对象为女性时，允许显示已婚男性
+
       const hasSpouses = m.spouses && Array.isArray(m.spouses) && m.spouses.length > 0
       const isCurrentSpouse = id && m.spouses && Array.isArray(m.spouses) && m.spouses.includes(id)
       const allowMarriedMaleForFemale = targetGender === '女' && mGender === '男'
-      
+
       return !hasSpouses || isCurrentSpouse || allowMarriedMaleForFemale
     })
-    
+
     const fatherIndex = fatherId ? fatherOptions.findIndex(m => m._id === fatherId) : -1
     const motherIndex = motherId ? motherOptions.findIndex(m => m._id === motherId) : -1
-    
-    this.setData({ 
+
+    console.log('loadAllMembers - data length:', data.length, 'fatherOptions:', fatherOptions.length, 'motherOptions:', motherOptions.length, 'spouseOptions:', spouseOptions.length)
+
+    this.setData({
       members: data,
       fatherOptions,
       motherOptions,
@@ -322,7 +259,7 @@ Page({
   toggleSpouse(e) {
     const spouseId = e.currentTarget.dataset.id
     if (!spouseId) return
-    
+
     let selectedSpouses = this.data.selectedSpouses || []
     if (selectedSpouses.indexOf(spouseId) > -1) {
       selectedSpouses = selectedSpouses.filter(id => id !== spouseId)
@@ -348,28 +285,27 @@ Page({
     const newSpouseNames = newSpouses.map(id => {
       const spouse = this.data.members.find(m => m._id === id)
       return spouse ? spouse.name : ''
-    }).filter(name => name).join('、')
-    
-    this.setData({ 
+    }).filter(name => name)
+
+    this.setData({
       spouses: newSpouses,
-      spouseNames: newSpouseNames,
+      spouseNames: newSpouseNames.join('、'),
       showSpouseModal: false
     })
   },
 
-  onNameInput(e) {
-    this.setData({ name: e.detail.value })
-  },
-
-  onRankTitleInput(e) {
-    this.setData({ rankTitle: e.detail.value })
+  onSpouseChange(e) {
+    this.setData({
+      selectedSpouses: e.detail.value
+    })
   },
 
   onGenderChange(e) {
-    const gender = e.detail.value
-    this.setData({ gender })
-    // 性别改变时，重新加载配偶选项
-    this.loadAllMembers()
+    this.setData({ gender: e.detail.value })
+  },
+
+  onNameInput(e) {
+    this.setData({ name: e.detail.value })
   },
 
   onBirthYearInput(e) {
@@ -380,229 +316,261 @@ Page({
     this.setData({ deathYear: e.detail.value })
   },
 
-  onFatherChange(e) {
-    const index = parseInt(e.detail.value)
-    const { fatherOptions } = this.data
-    const fatherId = index >= 0 && fatherOptions[index] ? fatherOptions[index]._id : ''
-    this.setData({ 
-      fatherId: fatherId,
-      fatherIndex: index
-    })
+  onRankTitleInput(e) {
+    this.setData({ rankTitle: e.detail.value })
   },
 
-  onMotherChange(e) {
-    const index = parseInt(e.detail.value)
-    const { motherOptions } = this.data
-    const motherId = index >= 0 && motherOptions[index] ? motherOptions[index]._id : ''
-    this.setData({ 
-      motherId: motherId,
-      motherIndex: index
-    })
+  computeGeneration() {
+    const { fatherId, motherId, members } = this.data
+    let generation = 1
+    if (fatherId) {
+      const father = members.find(m => m._id === fatherId)
+      if (father) {
+        generation = (father.generation || 1) + 1
+      }
+    } else if (motherId) {
+      const mother = members.find(m => m._id === motherId)
+      if (mother) {
+        generation = (mother.generation || 1) + 1
+      }
+    }
+    this.setData({ generation })
   },
 
   onBioInput(e) {
     this.setData({ bio: e.detail.value })
   },
 
-  async onChooseAvatar() {
-    const res = await wx.chooseImage({ count: 1, sizeType: ['compressed'] })
-    if (res.tempFilePaths.length > 0) {
-      wx.showLoading({ title: '上传中...' })
-      
-      const cloudPath = `avatars/${Date.now()}-${Math.random()}.${res.tempFilePaths[0].split('.').pop()}`
-      
-      try {
-        const uploadRes = await wx.cloud.uploadFile({
-          cloudPath,
-          filePath: res.tempFilePaths[0]
-        })
-        
-        const tempRes = await wx.cloud.getTempFileURL({
-          fileList: [uploadRes.fileID]
-        })
-        
-        if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
-          this.setData({ 
-            avatar: tempRes.fileList[0].tempFileURL,
-            avatarCloudPath: uploadRes.fileID
-          })
-        } else {
-          this.setData({ avatar: uploadRes.fileID })
-        }
-        
-        wx.hideLoading()
-      } catch (e) {
-        wx.hideLoading()
-        wx.showToast({ title: '上传失败', icon: 'none' })
-        console.error('upload error:', e)
+  onFatherChange(e) {
+    const index = parseInt(e.detail.value)
+    const father = this.data.fatherOptions[index]
+    this.setData({
+      fatherId: father ? father._id : '',
+      motherId: father ? '' : this.data.motherId,
+      motherIndex: father ? -1 : this.data.motherIndex,
+      fatherIndex: index
+    })
+    this.computeGeneration()
+  },
+
+  onMotherChange(e) {
+    const index = parseInt(e.detail.value)
+    const mother = this.data.motherOptions[index]
+    this.setData({
+      motherId: mother ? mother._id : '',
+      fatherId: mother ? '' : this.data.fatherId,
+      fatherIndex: mother ? -1 : this.data.fatherIndex,
+      motherIndex: index
+    })
+    this.computeGeneration()
+  },
+
+  chooseAvatar() {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const tempFilePath = res.tempFilePaths[0]
+        this.setData({ avatar: tempFilePath })
+        this.uploadAvatar(tempFilePath)
       }
+    })
+  },
+
+  async uploadAvatar(filePath) {
+    wx.showLoading({ title: '上传中...' })
+    try {
+      const app = getApp()
+      const timestamp = Date.now()
+      const randomStr = Math.random().toString(36).substr(2, 9)
+      const cloudPath = `avatars/${timestamp}_${randomStr}.jpg`
+
+      await wx.cloud.uploadFile({
+        cloudPath: cloudPath,
+        filePath: filePath
+      })
+
+      this.setData({ avatarCloudPath: cloudPath })
+      wx.hideLoading()
+    } catch (e) {
+      console.error('Upload avatar error:', e)
+      wx.hideLoading()
+      wx.showToast({ title: '上传失败', icon: 'none' })
     }
+  },
+
+  removeAvatar() {
+    if (this.data.avatarCloudPath) {
+      this.setData({ avatarToDelete: this.data.avatarCloudPath })
+    }
+    this.setData({
+      avatar: '',
+      avatarCloudPath: ''
+    })
+  },
+
+  onChooseAvatar() {
+    this.chooseAvatar()
   },
 
   onPreviewAvatar() {
-    const { avatar, avatarCloudPath } = this.data
-    
-    if (!avatar) return
-    
-    if (avatar.startsWith('http')) {
+    if (this.data.avatar) {
       wx.previewImage({
-        urls: [avatar]
+        urls: [this.data.avatar],
+        current: this.data.avatar
       })
-      return
     }
-    
-    wx.showLoading({ title: '加载中...' })
-    
-    wx.cloud.getTempFileURL({
-      fileList: [avatarCloudPath || avatar],
-      success: (res) => {
-        wx.hideLoading()
-        if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
-          wx.previewImage({
-            urls: [res.fileList[0].tempFileURL]
-          })
-        } else {
-          wx.showToast({ title: '获取图片失败', icon: 'none' })
-        }
-      },
-      fail: (err) => {
-        wx.hideLoading()
-        console.error('getTempFileURL error:', err)
-        wx.showToast({ title: '获取图片失败', icon: 'none' })
-      }
-    })
   },
 
   onDeleteAvatar() {
-    const { avatar, avatarCloudPath } = this.data
-    if (!avatar) return
-    
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除头像吗？',
-      success: (res) => {
-        if (res.confirm) {
-          this.setData({ 
-            avatar: '', 
-            avatarCloudPath: '',
-            avatarToDelete: avatarCloudPath || ''
-          })
-        }
-      }
-    })
+    this.removeAvatar()
   },
 
-  async onSave() {
-    const { name, gender, generation, birthYear, deathYear, fatherId, motherId, rankTitle, bio, avatar, avatarCloudPath, avatarToDelete, id, isEdit, fatherIndex, motherIndex, fatherOptions, motherOptions } = this.data
-    
-    if (!name.trim()) {
+  onSave() {
+    this.saveMember()
+  },
+
+  async saveMember() {
+    const { id, name, gender, birthYear, deathYear, spouses, fatherId, motherId, rankTitle, bio, avatarCloudPath, avatarToDelete, loading, members } = this.data
+
+    if (loading) return
+
+    if (!name || !name.trim()) {
       wx.showToast({ title: '请输入姓名', icon: 'none' })
       return
     }
 
-    if (fatherIndex >= 0 && fatherOptions[fatherIndex]) {
-      const father = fatherOptions[fatherIndex]
-      if (father.gender !== '男') {
-        wx.showToast({ title: '父亲必须是男性', icon: 'none' })
-        return
-      }
-    }
-
-    if (motherIndex >= 0 && motherOptions[motherIndex]) {
-      const mother = motherOptions[motherIndex]
-      if (mother.gender !== '女') {
-        wx.showToast({ title: '母亲必须是女性', icon: 'none' })
-        return
-      }
-    }
-
-    if (fatherId && motherId && fatherId === motherId) {
-      wx.showToast({ title: '父亲和母亲不能是同一人', icon: 'none' })
-      return
-    }
-
-    if (id && (fatherId === id || motherId === id)) {
-      wx.showToast({ title: '不能选择自己作为父母', icon: 'none' })
-      return
-    }
-
-    const db = wx.cloud.database()
-    const currentSpouses = this.data.spouses || []
-    const originalSpouses = this.data.originalSpouses || []
-    
-    // 找出移除和新增的配偶
-    const removedSpouses = originalSpouses.filter(sid => !currentSpouses.includes(sid))
-    const addedSpouses = currentSpouses.filter(sid => !originalSpouses.includes(sid))
-
-    let finalGeneration = generation
-    if (fatherId && fatherIndex >= 0 && fatherOptions[fatherIndex]) {
-      finalGeneration = (fatherOptions[fatherIndex].generation || 1) + 1
-    } else if (!fatherId && !id) {
-      finalGeneration = 1
+    let generation = 1
+    if (fatherId) {
+      const father = members.find(m => m._id === fatherId)
+      if (father) generation = (father.generation || 1) + 1
+    } else if (motherId) {
+      const mother = members.find(m => m._id === motherId)
+      if (mother) generation = (mother.generation || 1) + 1
     }
 
     this.setData({ loading: true })
-    const dataToSave = {
-      name: name.trim(),
-      gender,
-      generation: finalGeneration,
-      birthYear,
-      deathYear,
-      spouses: currentSpouses,
-      fatherId,
-      motherId,
-      rankTitle: rankTitle.trim(),
-      bio,
-      avatar: avatarCloudPath || '',
-      updateTime: db.serverDate()
-    }
 
     try {
-      let currentId = id
-      if (isEdit) {
-        await db.collection('members').doc(id).update({ data: dataToSave })
-        
-        if (fatherId && fatherIndex >= 0 && fatherOptions[fatherIndex]) {
-          const newFatherGen = fatherOptions[fatherIndex].generation || 1
-          await this.updateDescendantsGeneration(db, id, newFatherGen + 1)
-        }
-      } else {
-        dataToSave.createTime = db.serverDate()
-        const res = await db.collection('members').add({ data: dataToSave })
-        currentId = res._id
+      const app = getApp()
+      const currentSpouses = spouses || []
+      const originalSpouses = this.data.originalSpouses || []
+
+      const dataToSave = {
+        name: name.trim(),
+        gender,
+        generation: parseInt(generation) || 1,
+        birthYear: birthYear ? parseInt(birthYear) : '',
+        deathYear: deathYear ? parseInt(deathYear) : '',
+        spouses: currentSpouses,
+        fatherId: fatherId || '',
+        motherId: motherId || '',
+        rankTitle: rankTitle.trim(),
+        bio: bio.trim(),
+        avatar: avatarCloudPath || ''
       }
-      
-      // 同步处理关联配偶的数据一致性
-      // 1. 清除移除配偶的关联
-      for (const spouseId of removedSpouses) {
-        if (spouseId) {
-          const spouseMember = await db.collection('members').doc(spouseId).get()
-          if (spouseMember.data) {
-            const updatedSpouses = (spouseMember.data.spouses || []).filter(sid => sid !== currentId)
-            await db.collection('members').doc(spouseId).update({
-              data: { spouses: updatedSpouses }
-            })
+
+      let savedId
+
+      if (id) {
+        const res = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataUpdate',
+            collection: 'members',
+            familyId: app.globalData.familyId,
+            recordId: id,
+            data: dataToSave
+          }
+        })
+        if (!res.result?.success) {
+          throw new Error(res.result?.errMsg || '更新失败')
+        }
+        savedId = id
+      } else {
+        const res = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataAdd',
+            collection: 'members',
+            familyId: app.globalData.familyId,
+            data: dataToSave
+          }
+        })
+        if (!res.result?.success) {
+          throw new Error(res.result?.errMsg || '新增失败')
+        }
+        savedId = res.result.id
+      }
+
+      const spousesToAdd = currentSpouses.filter(s => !originalSpouses.includes(s))
+      const spousesToRemove = originalSpouses.filter(s => !currentSpouses.includes(s))
+
+      for (const spouseId of spousesToAdd) {
+        if (spouseId && spouseId !== savedId) {
+          const result = await wx.cloud.callFunction({
+            name: 'quickstartFunctions',
+            data: {
+              type: 'familyDataQuery',
+              collection: 'members',
+              familyId: app.globalData.familyId,
+              limit: 100
+            }
+          })
+          if (result.result?.success && result.result.data) {
+            const spouseData = result.result.data.find(m => m._id === spouseId)
+            if (spouseData) {
+              const currentSpousesOfSpouse = spouseData.spouses || []
+              if (!currentSpousesOfSpouse.includes(savedId)) {
+                await wx.cloud.callFunction({
+                  name: 'quickstartFunctions',
+                  data: {
+                    type: 'familyDataUpdate',
+                    collection: 'members',
+                    familyId: app.globalData.familyId,
+                    recordId: spouseId,
+                    data: { spouses: [...currentSpousesOfSpouse, savedId] }
+                  }
+                })
+              }
+            }
           }
         }
       }
-      
-      // 2. 添加新增配偶的关联
-      for (const spouseId of addedSpouses) {
-        if (spouseId) {
-          const spouseMember = await db.collection('members').doc(spouseId).get()
-          if (spouseMember.data) {
-            const currentSpousesOfSpouse = spouseMember.data.spouses || []
-            if (!currentSpousesOfSpouse.includes(currentId)) {
-              await db.collection('members').doc(spouseId).update({
-                data: { spouses: [...currentSpousesOfSpouse, currentId] }
+
+      for (const spouseId of spousesToRemove) {
+        if (spouseId && spouseId !== savedId) {
+          const result = await wx.cloud.callFunction({
+            name: 'quickstartFunctions',
+            data: {
+              type: 'familyDataQuery',
+              collection: 'members',
+              familyId: app.globalData.familyId,
+              limit: 100
+            }
+          })
+          if (result.result?.success && result.result.data) {
+            const spouseData = result.result.data.find(m => m._id === spouseId)
+            if (spouseData) {
+              const currentSpousesOfSpouse = (spouseData.spouses || []).filter(s => s !== savedId)
+              await wx.cloud.callFunction({
+                name: 'quickstartFunctions',
+                data: {
+                  type: 'familyDataUpdate',
+                  collection: 'members',
+                  familyId: app.globalData.familyId,
+                  recordId: spouseId,
+                  data: { spouses: currentSpousesOfSpouse }
+                }
               })
             }
           }
         }
       }
-      
+
       wx.showToast({ title: '保存成功' })
-      
+
       if (avatarToDelete) {
         try {
           await wx.cloud.deleteFile({
@@ -612,11 +580,21 @@ Page({
           console.error('delete avatar error:', e)
         }
       }
-      
-      const app = getApp()
-      app.globalData.membersVersion = (app.globalData.membersVersion || 0) + 1
-      wx.setStorageSync('member_version', app.globalData.membersVersion)
-      
+
+      const familyId = app.globalData.familyId
+      try {
+        const res = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: { type: 'incrementMembersVersion', familyId }
+        })
+        if (res.result && res.result.success) {
+          app.globalData.membersVersion = res.result.membersVersion
+        }
+      } catch (e) {
+        console.error('incrementMembersVersion error:', e)
+      }
+      cacheManager.invalidate(cacheManager.keys.members)
+
       setTimeout(() => {
         wx.navigateBack()
       }, 1500)
@@ -628,27 +606,35 @@ Page({
     }
   },
 
-  async updateDescendantsGeneration(db, parentId, parentGeneration) {
-    const { data: children } = await db.collection('members').where({
-      fatherId: parentId
-    }).get()
-
-    for (const child of children) {
-      await db.collection('members').doc(child._id).update({
-        data: { generation: parentGeneration + 1 }
-      })
-      await this.updateDescendantsGeneration(db, child._id, parentGeneration + 1)
-    }
-  },
-
   async checkGrave(memberId) {
     if (!memberId) return
 
+    const app = getApp()
+    const db = wx.cloud.database()
+
     try {
-      const db = wx.cloud.database()
-      const { data } = await db.collection('graves')
-        .where({ memberId: memberId })
-        .get()
+      let { data } = []
+
+      if (app.globalData.familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'graves',
+            familyId: app.globalData.familyId,
+            limit: 100
+          }
+        })
+
+        if (result.result && result.result.success && result.result.data) {
+          data = result.result.data.filter(g => g.memberId === memberId)
+        }
+      } else {
+        const res = await db.collection('graves')
+          .where({ memberId: memberId })
+          .get()
+        data = res.data
+      }
 
       this.setData({
         hasGrave: data && data.length > 0,
@@ -660,7 +646,7 @@ Page({
   },
 
   onGraveTap() {
-    const { id, hasGrave, graveCount } = this.data
+    const { id, hasGrave } = this.data
 
     if (hasGrave) {
       wx.navigateTo({

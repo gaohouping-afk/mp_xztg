@@ -1,5 +1,4 @@
-const CACHE_KEY = 'grave_graves'
-const VERSION_KEY = 'grave_version'
+const cacheManager = require('../../utils/cacheManager.js')
 
 const GRAVE_TYPES = [
   { value: 'ancestor', label: '祖先墓', color: '#8B4513' },
@@ -32,10 +31,10 @@ Page({
 
   onShow() {
     const app = getApp()
-    const cachedVersion = wx.getStorageSync(VERSION_KEY)
+    const { version } = cacheManager.get(cacheManager.keys.graves, app.globalData.familyId)
     const currentVersion = app.globalData.gravesVersion
 
-    if (currentVersion !== cachedVersion) {
+    if (currentVersion !== version) {
       this.loadGraves(true)
     }
   },
@@ -55,20 +54,15 @@ Page({
   async loadGraves(reset = false) {
     if (this.data.loading) return
 
-    const { memberId } = this.data
-    const cacheKey = CACHE_KEY
-    const versionKey = VERSION_KEY
     const app = getApp()
+    const familyId = app.globalData.familyId
+    const { memberId } = this.data
 
     if (reset) {
-      const cached = wx.getStorageSync(cacheKey)
-      const cachedVersion = wx.getStorageSync(versionKey)
+      const { data: cached, version } = cacheManager.get(cacheManager.keys.graves, familyId)
       const currentVersion = app.globalData.gravesVersion
 
-      if (cached && cached.length > 0 && cachedVersion === currentVersion && currentVersion > 0) {
-        this.processGravesData(cached)
-        return
-      } else if (cached && cached.length > 0 && currentVersion === 0) {
+      if (cached && cached.length > 0 && version === currentVersion) {
         this.processGravesData(cached)
         return
       }
@@ -76,31 +70,63 @@ Page({
 
     this.setData({ loading: true })
 
-    const db = wx.cloud.database()
-
     let allGraves = []
     let skip = reset ? 0 : this.data.graves.length
     let hasMore = true
 
     while (hasMore) {
-      let query = db.collection('graves')
+      if (familyId) {
+        try {
+          const result = await wx.cloud.callFunction({
+            name: 'quickstartFunctions',
+            data: {
+              type: 'familyDataQuery',
+              collection: 'graves',
+              familyId: familyId,
+              orderBy: { field: 'createTime', order: 'desc' },
+              skip: skip,
+              limit: 20
+            }
+          })
 
-      if (memberId) {
-        query = query.where({ memberId: memberId })
+          if (result.result && result.result.success && result.result.data) {
+            let filteredData = result.result.data
+            if (memberId) {
+              filteredData = result.result.data.filter(g => g.memberId === memberId)
+            }
+            allGraves = [...allGraves, ...filteredData]
+            hasMore = result.result.data.length === 20
+          } else {
+            hasMore = false
+          }
+        } catch (e) {
+          console.error('loadGraves cloud function error:', e)
+          hasMore = false
+        }
+      } else {
+        const db = wx.cloud.database()
+        let query = db.collection('graves')
+
+        if (memberId) {
+          query = query.where({ memberId: memberId })
+        }
+
+        try {
+          const { data } = await query
+            .orderBy('createTime', 'desc')
+            .skip(skip)
+            .limit(20)
+            .get()
+
+          allGraves = [...allGraves, ...data]
+          hasMore = data.length === 20
+        } catch (e) {
+          console.error('loadGraves db error:', e)
+          hasMore = false
+        }
       }
 
-      const { data } = await query
-        .orderBy('createTime', 'desc')
-        .skip(skip)
-        .limit(20)
-        .get()
-
-      if (data.length > 0) {
-        allGraves = [...allGraves, ...data]
-        skip += 20
-      }
-
-      hasMore = data.length === 20
+      skip += 20
     }
 
     const finalGraves = reset ? allGraves : [...this.data.graves, ...allGraves]
@@ -111,8 +137,7 @@ Page({
       loading: false
     })
 
-    wx.setStorageSync(versionKey, app.globalData.gravesVersion)
-    wx.setStorageSync(cacheKey, finalGraves)
+    cacheManager.set(cacheManager.keys.graves, familyId, finalGraves, app.globalData.gravesVersion)
 
     await this.enrichWithMemberInfo(finalGraves)
     this.getFilteredGraves()
@@ -121,13 +146,34 @@ Page({
   async loadMemberName(memberId) {
     if (!memberId) return
 
-    try {
-      const db = wx.cloud.database()
-      const { data } = await db.collection('members').doc(memberId).get()
+    const app = getApp()
+    const db = wx.cloud.database()
 
-      if (data) {
-        this.setData({ memberName: data.name })
-        wx.setNavigationBarTitle({ title: `${data.name}的墓碑` })
+    try {
+      let member = null
+
+      if (app.globalData.familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'members',
+            familyId: app.globalData.familyId,
+            limit: 100
+          }
+        })
+
+        if (result.result && result.result.success && result.result.data) {
+          member = result.result.data.find(m => m._id === memberId)
+        }
+      } else {
+        const res = await db.collection('members').doc(memberId).get()
+        member = res.data
+      }
+
+      if (member) {
+        this.setData({ memberName: member.name })
+        wx.setNavigationBarTitle({ title: `${member.name}的墓碑` })
       }
     } catch (e) {
       console.error('loadMemberName error:', e)
@@ -137,17 +183,37 @@ Page({
   async enrichWithMemberInfo(graves) {
     if (!graves || graves.length === 0) return
 
+    const app = getApp()
     const db = wx.cloud.database()
     const memberIds = graves.map(g => g.memberId).filter(id => id)
 
     if (memberIds.length === 0) return
 
     try {
-      const { data: members } = await db.collection('members')
-        .where({
-          _id: db.command.in(memberIds)
+      let members = []
+
+      if (app.globalData.familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'members',
+            familyId: app.globalData.familyId,
+            limit: 100
+          }
         })
-        .get()
+
+        if (result.result && result.result.success && result.result.data) {
+          members = result.result.data
+        }
+      } else {
+        const res = await db.collection('members')
+          .where({
+            _id: db.command.in(memberIds)
+          })
+          .get()
+        members = res.data
+      }
 
       const membersMap = {}
       members.forEach(m => {
@@ -171,10 +237,21 @@ Page({
       })
 
       this.setData({ graves: enrichedGraves })
-      wx.setStorageSync(CACHE_KEY, enrichedGraves)
       this.getFilteredGraves()
     } catch (e) {
       console.error('enrichWithMemberInfo error:', e)
+      const enrichedGraves = graves.map(grave => {
+        const typeInfo = GRAVE_TYPES.find(t => t.value === grave.graveType) || GRAVE_TYPES[4]
+        return {
+          ...grave,
+          memberName: '未知成员',
+          memberLastChar: '成员',
+          typeLabel: typeInfo.label,
+          typeColor: typeInfo.color
+        }
+      })
+      this.setData({ graves: enrichedGraves, loading: false })
+      this.getFilteredGraves()
     }
   },
 

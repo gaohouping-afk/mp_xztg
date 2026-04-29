@@ -1,0 +1,229 @@
+.page {
+  min-height: 100vh;
+  background: #F8F6F3;
+  padding-bottom: 120rpx;
+}
+
+.header-section {
+  background: #FFFFFF;
+  padding: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.family-info {
+  flex: 1;
+}
+
+.family-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.member-count {
+  display: block;
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.invite-btn {
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  color: #FFFFFF;
+  font-size: 28rpx;
+  padding: 16rpx 32rpx;
+  border-radius: 30rpx;
+}
+
+.invite-btn::after {
+  border: none;
+}
+
+.member-list {
+  padding: 0 32rpx;
+}
+
+.role-section {
+  margin-bottom: 32rpx;
+}
+
+.role-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 0 8rpx;
+}
+
+.role-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+.role-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-right: 12rpx;
+}
+
+.role-count {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.member-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4rpx 16rpx rgba(139, 69, 19, 0.06);
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.member-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #A0522D, #CD853F);
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.member-avatar.owner {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #8B4513;
+}
+
+.member-avatar.admin {
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+}
+
+.member-avatar.member {
+  background: linear-gradient(135deg, #A0522D, #CD853F);
+}
+
+.member-avatar.viewer {
+  background: linear-gradient(135deg, #999999, #CCCCCC);
+}
+
+.member-detail {
+  flex: 1;
+}
+
+.member-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 6rpx;
+}
+
+.member-meta {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.member-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  min-width: 160rpx;
+}
+
+.action-btn {
+  background: #F8F6F3;
+  color: #8B4513;
+  font-size: 24rpx;
+  padding: 14rpx 20rpx;
+  border-radius: 16rpx;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.action-btn.danger {
+  background: #FFF0F0;
+  color: #FF6666;
+}
+
+.member-role {
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  margin-left: 16rpx;
+}
+
+.member-role.owner {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #8B4513;
+}
+
+.member-role.admin {
+  background: #F8F6F3;
+  color: #8B4513;
+}
+
+.member-role.member {
+  background: #F8F6F3;
+  color: #666666;
+}
+
+.member-role.viewer {
+  background: #F0F0F0;
+  color: #999999;
+}
+
+.loading-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 4rpx solid #F0F0F0;
+  border-top-color: #8B4513;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999999;
+}

@@ -1,6 +1,10 @@
 <view class="page">
   <view class="hero-section">
     <view class="hero-bg"></view>
+    <view class="family-switch-pill" bindtap="showFamilySwitcher">
+      <text class="switch-pill-text">{{currentFamilyName || '选择家族'}}</text>
+      <text class="switch-pill-arrow">▼</text>
+    </view>
     <view class="hero-content">
       <image class="hero-badge" src="/images/icons/temple.svg" mode="aspectFit" />
       <view class="hero-title">寻公问祖</view>
@@ -49,9 +53,40 @@
   </view>
 
   <view class="footer-section">
-    <view class="privacy-note">
-      <text>温馨提示：数据隔离，仅见本人添加内容。</text>
+    <view class="footer-buttons">
+      <button class="about-btn" bindtap="goToFamily">家族</button>
+      <button class="about-btn" bindtap="goToAbout">关于</button>
+      <button class="about-btn" bindtap="onSyncData">刷新数据</button>
     </view>
-    <button class="about-btn" bindtap="goToAbout">关于</button>
+  </view>
+
+  <view class="family-picker-mask {{showFamilyPicker ? 'show' : ''}}" bindtap="hideFamilySwitcher"></view>
+  <view class="family-picker-panel {{showFamilyPicker ? 'show' : ''}}">
+    <view class="picker-handle"></view>
+    <view class="picker-header">
+      <text class="picker-title">切换家族</text>
+      <text class="picker-subtitle" wx:if="{{myFamilies.length > 0}}">共 {{myFamilies.length}} 个家族</text>
+    </view>
+    <scroll-view class="picker-list" scroll-y="{{true}}">
+      <view class="picker-item {{item._id === currentFamilyId ? 'active' : ''}}" wx:for="{{myFamilies}}" wx:key="_id" bindtap="onFamilySelect" data-id="{{item._id}}">
+        <view class="picker-item-icon">
+          <text>{{item.name[0]}}</text>
+        </view>
+        <view class="picker-item-info">
+          <text class="picker-item-name">{{item.name}}</text>
+          <text class="picker-item-role">{{item.roleLabel || '成员'}}</text>
+        </view>
+        <view class="picker-item-check" wx:if="{{item._id === currentFamilyId}}">
+          <text>✓</text>
+        </view>
+      </view>
+      <view class="picker-empty" wx:if="{{myFamilies.length === 0}}">
+        <text>暂未加入任何家族</text>
+        <button class="picker-empty-btn" bindtap="goToFamily">创建/加入家族</button>
+      </view>
+    </scroll-view>
+    <view class="picker-footer" wx:if="{{myFamilies.length > 0}}">
+      <button class="picker-manage-btn" bindtap="goToFamily">管理家族</button>
+    </view>
   </view>
 </view>

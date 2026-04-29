@@ -177,6 +177,221 @@
   flex-shrink: 0;
 }
 
+.family-switch-pill {
+  position: absolute;
+  top: 40rpx;
+  right: 32rpx;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50rpx;
+  padding: 12rpx 24rpx;
+  max-width: 320rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.switch-pill-text {
+  font-size: 26rpx;
+  color: #FFFFFF;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220rpx;
+}
+
+.switch-pill-arrow {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-left: 10rpx;
+}
+
+.family-picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 900;
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+.family-picker-mask.show {
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.family-picker-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 901;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.family-picker-panel.show {
+  transform: translateY(0);
+}
+
+.picker-handle {
+  width: 60rpx;
+  height: 8rpx;
+  background: #DDDDDD;
+  border-radius: 4rpx;
+  margin: 20rpx auto 0;
+}
+
+.picker-header {
+  padding: 32rpx 40rpx 20rpx;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.picker-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 6rpx;
+}
+
+.picker-subtitle {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.picker-list {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  max-height: 50vh;
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  margin-bottom: 12rpx;
+  background: #FAFAFA;
+  transition: background 0.15s ease;
+}
+
+.picker-item.active {
+  background: #F5EDE5;
+}
+
+.picker-item:active {
+  background: #EDE5DC;
+}
+
+.picker-item-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.picker-item-icon text {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.picker-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.picker-item-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #1A1A1A;
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker-item-role {
+  font-size: 24rpx;
+  color: #8B4513;
+}
+
+.picker-item-check {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: #8B4513;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.picker-item-check text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+}
+
+.picker-empty {
+  padding: 60rpx 40rpx;
+  text-align: center;
+}
+
+.picker-empty text {
+  display: block;
+  font-size: 28rpx;
+  color: #999999;
+  margin-bottom: 32rpx;
+}
+
+.picker-empty-btn {
+  display: inline-block;
+  background: #8B4513;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  padding: 20rpx 48rpx;
+  border-radius: 50rpx;
+}
+
+.picker-footer {
+  padding: 20rpx 32rpx;
+  border-top: 1px solid #F0F0F0;
+}
+
+.picker-manage-btn {
+  width: 100%;
+  background: #F5F5F5;
+  color: #666666;
+  font-size: 30rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  border: none;
+}
+
+.picker-manage-btn:active {
+  background: #EBEBEB;
+}
+
 .footer-section {
   padding: 40rpx 32rpx;
   text-align: center;
@@ -191,6 +406,12 @@
   font-size: 24rpx;
   color: #999999;
   line-height: 1.6;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
 }
 
 .about-btn {
@@ -208,5 +429,24 @@
 }
 
 .about-btn:active {
+  background: #F5F3F0;
+}
+
+.sync-btn {
+  position: relative;
+  padding-left: 50rpx;
+}
+
+.sync-btn::before {
+  content: '↻';
+  position: absolute;
+  left: 28rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 28rpx;
+  color: #8B4513;
+}
+
+.sync-btn:active {
   background: #F5F3F0;
 }

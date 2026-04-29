@@ -72,29 +72,83 @@ Page({
   async loadGrave(id) {
     this.setData({ loading: true })
 
+    const app = getApp()
     const db = wx.cloud.database()
 
+    console.log('graveDetail loadGrave - id:', id)
+    console.log('graveDetail loadGrave - familyId:', app.globalData.familyId)
+
     try {
-      const { data } = await db.collection('graves').doc(id).get()
+      let grave = null
 
-      if (data) {
-        const typeInfo = GRAVE_TYPES.find(t => t.value === data.graveType) || GRAVE_TYPES[4]
+      if (app.globalData.familyId) {
+        console.log('graveDetail - using cloud function')
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'graves',
+            familyId: app.globalData.familyId,
+            limit: 100
+          }
+        })
 
-        const photos = await this.convertImagesToTempUrls(data.photos || [])
+        console.log('graveDetail - cloud function result:', result)
+
+        if (result.result && result.result.success && result.result.data) {
+          grave = result.result.data.find(g => g._id === id)
+          console.log('graveDetail - found grave:', grave)
+        } else {
+          console.log('graveDetail - no grave found, result:', result.result)
+        }
+      } else {
+        console.log('graveDetail - using direct db query')
+        const res = await db.collection('graves').doc(id).get()
+        grave = res.data
+      }
+
+      if (grave) {
+        console.log('graveDetail - processing grave')
+        const typeInfo = GRAVE_TYPES.find(t => t.value === grave.graveType) || GRAVE_TYPES[4]
+
+        const photos = await this.convertImagesToTempUrls(grave.photos || [])
 
         let member = null
-        if (data.memberId) {
-          try {
-            const memberRes = await db.collection('members').doc(data.memberId).get()
-            member = memberRes.data
-          } catch (e) {
-            console.error('load member error:', e)
+        if (grave.memberId) {
+          console.log('graveDetail - loading member:', grave.memberId)
+          if (app.globalData.familyId) {
+            try {
+              const memberResult = await wx.cloud.callFunction({
+                name: 'quickstartFunctions',
+                data: {
+                  type: 'familyDataQuery',
+                  collection: 'members',
+                  familyId: app.globalData.familyId,
+                  limit: 100
+                }
+              })
+
+              console.log('graveDetail - member result:', memberResult)
+
+              if (memberResult.result && memberResult.result.success && memberResult.result.data) {
+                member = memberResult.result.data.find(m => m._id === grave.memberId)
+              }
+            } catch (e) {
+              console.error('load member error:', e)
+            }
+          } else {
+            try {
+              const memberRes = await db.collection('members').doc(grave.memberId).get()
+              member = memberRes.data
+            } catch (e) {
+              console.error('load member error:', e)
+            }
           }
         }
 
         this.setData({
           grave: {
-            ...data,
+            ...grave,
             photos,
             typeLabel: typeInfo.label,
             typeColor: typeInfo.color
@@ -103,6 +157,7 @@ Page({
           loading: false
         })
       } else {
+        console.log('graveDetail - grave not found')
         this.setData({ loading: false })
         wx.showToast({ title: '墓碑不存在', icon: 'none' })
       }
@@ -159,11 +214,18 @@ Page({
   },
 
   async deleteGrave() {
+    const app = getApp()
     try {
-      const db = wx.cloud.database()
-      await db.collection('graves').doc(this.data.grave._id).remove()
+      await wx.cloud.callFunction({
+        name: 'quickstartFunctions',
+        data: {
+          type: 'familyDataRemove',
+          collection: 'graves',
+          familyId: app.globalData.familyId,
+          recordId: this.data.grave._id
+        }
+      })
 
-      const app = getApp()
       app.globalData.gravesVersion = (app.globalData.gravesVersion || 0) + 1
 
       wx.showToast({ title: '删除成功' })
@@ -246,22 +308,27 @@ Page({
       cancelText: '取消',
       success: async (res) => {
         if (res.confirm) {
-          try {
-            const db = wx.cloud.database()
-            const now = new Date()
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+          const app = getApp()
+          const now = new Date()
+          const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
 
-            await db.collection('graves').doc(grave._id).update({
+          try {
+            await wx.cloud.callFunction({
+              name: 'quickstartFunctions',
               data: {
-                visitDate: dateStr,
-                visitTime: timeStr,
-                visitCount: (grave.visitCount || 0) + 1,
-                updateTime: db.serverDate()
+                type: 'familyDataUpdate',
+                collection: 'graves',
+                familyId: app.globalData.familyId,
+                recordId: grave._id,
+                data: {
+                  visitDate: dateStr,
+                  visitTime: timeStr,
+                  visitCount: (grave.visitCount || 0) + 1
+                }
               }
             })
 
-            const app = getApp()
             app.globalData.gravesVersion = (app.globalData.gravesVersion || 0) + 1
 
             wx.showToast({ title: '已记录扫墓' })
@@ -308,20 +375,24 @@ Page({
 
   async onSaveVisit() {
     const { grave, editVisitDate, editVisitTime, editVisitCount } = this.data
+    const app = getApp()
 
     try {
-      const db = wx.cloud.database()
-
-      await db.collection('graves').doc(grave._id).update({
+      await wx.cloud.callFunction({
+        name: 'quickstartFunctions',
         data: {
-          visitDate: editVisitDate,
-          visitTime: editVisitTime,
-          visitCount: editVisitCount,
-          updateTime: db.serverDate()
+          type: 'familyDataUpdate',
+          collection: 'graves',
+          familyId: app.globalData.familyId,
+          recordId: grave._id,
+          data: {
+            visitDate: editVisitDate,
+            visitTime: editVisitTime,
+            visitCount: editVisitCount
+          }
         }
       })
 
-      const app = getApp()
       app.globalData.gravesVersion = (app.globalData.gravesVersion || 0) + 1
 
       wx.showToast({ title: '保存成功' })

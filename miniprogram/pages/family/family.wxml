@@ -1,0 +1,170 @@
+<view class="page">
+  <view class="header-card" wx:if="{{family}}">
+    <view class="family-header-row">
+      <view class="family-main-info">
+        <view class="family-icon">👑</view>
+        <view class="family-name">{{family.name}}</view>
+      </view>
+      <view class="switch-btn" bindtap="onSwitchFamily" wx:if="{{myFamilies.length > 1}}">
+        <text>切换家族</text>
+      </view>
+    </view>
+    <view class="family-stats">
+      <text class="stat-item">👥 {{memberCount}}人</text>
+      <text class="stat-divider">|</text>
+      <text class="stat-item">👤 {{myRoleLabel}}</text>
+      <text class="stat-divider" wx:if="{{myFamilies.length > 1}}">|</text>
+      <text class="stat-item" wx:if="{{myFamilies.length > 1}}">🏠 {{myFamilies.length}}个家族</text>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!family && !loading}}">
+    <view class="empty-icon">🏠</view>
+    <view class="empty-title">还没有加入家族</view>
+    <view class="empty-desc">创建家族或加入现有家族，开始使用</view>
+    <view class="empty-actions">
+      <button class="action-btn primary" bindtap="onCreateFamily">创建家族</button>
+      <button class="action-btn" bindtap="onScrollToInvite">加入家族</button>
+    </view>
+  </view>
+
+  <view class="invite-card" wx:if="{{family}}">
+    <view class="invite-header">
+      <text class="invite-icon">📢</text>
+      <text class="invite-title">邀请码</text>
+    </view>
+
+    <view class="invite-main">
+      <view class="invite-qr-section">
+        <view class="qrcode-container" bindtap="onShowQRCode">
+          <image class="qrcode-image" src="{{qrcodeUrl}}" mode="aspectFit" wx:if="{{qrcodeUrl}}" />
+          <view class="qrcode-placeholder" wx:else>
+            <text class="qrcode-loading">生成中...</text>
+          </view>
+        </view>
+        <text class="qrcode-hint">点击查看大图</text>
+      </view>
+
+      <view class="invite-code-section">
+        <text class="invite-code-label">我的邀请码</text>
+        <text class="invite-code-value">{{family.inviteCode}}</text>
+        <button class="copy-btn" bindtap="onCopyInviteCode">复制邀请码</button>
+      </view>
+    </view>
+
+    <view class="invite-divider">
+      <text class="divider-text">输入邀请码加入家族</text>
+    </view>
+
+    <view class="join-section">
+      <input
+        class="join-input"
+        type="text"
+        placeholder="请输入6位邀请码"
+        maxlength="6"
+        value="{{inputInviteCode}}"
+        bindinput="onInviteCodeInput"
+      />
+      <button class="join-btn {{inputInviteCode.length === 6 ? 'active' : ''}}" bindtap="onPreviewInviteCode" disabled="{{inputInviteCode.length !== 6}}">查找</button>
+    </view>
+
+    <view class="preview-card" wx:if="{{previewFamily}}">
+      <view class="preview-header">
+        <text class="preview-icon">🏠</text>
+        <text class="preview-name">{{previewFamily.name}}</text>
+      </view>
+      <view class="preview-info">
+        <text class="preview-owner">族长：{{previewFamily.ownerName}}</text>
+        <text class="preview-count">共 {{previewFamily.memberCount}} 人</text>
+      </view>
+      <button class="preview-join-btn" bindtap="onJoinFamily" loading="{{joining}}">确认加入</button>
+    </view>
+
+    <view class="invite-hint">分享给家人，一起维护家族数据</view>
+  </view>
+
+  <view class="menu-section" wx:if="{{family}}">
+    <view class="menu-card" bindtap="onCreateFamily">
+      <view class="menu-card-left">
+        <text class="menu-icon">🏗️</text>
+        <view class="menu-content">
+          <text class="menu-title">创建新家族</text>
+          <text class="menu-desc">创建一个新的家族</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <view class="menu-card" bindtap="onManageMembers">
+      <view class="menu-card-left">
+        <text class="menu-icon">👥</text>
+        <view class="menu-content">
+          <text class="menu-title">成员管理</text>
+          <text class="menu-desc">添加成员、设置权限</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <button class="menu-card share-btn" open-type="share">
+      <view class="menu-card-left">
+        <text class="menu-icon">📱</text>
+        <view class="menu-content">
+          <text class="menu-title">邀请成员</text>
+          <text class="menu-desc">分享邀请码给家人</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </button>
+
+    <view class="menu-card" bindtap="onFamilySettings">
+      <view class="menu-card-left">
+        <text class="menu-icon">⚙️</text>
+        <view class="menu-content">
+          <text class="menu-title">家族设置</text>
+          <text class="menu-desc">修改名称、转让族长</text>
+        </view>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="loading-view" wx:if="{{loading}}">
+    <view class="loading-icon">🏠</view>
+    <view class="loading-text">正在加载家族信息...</view>
+    <view class="loading-hint">请稍候</view>
+  </view>
+
+  <view class="family-picker-mask" wx:if="{{showFamilyPicker}}" bindtap="hideFamilyPicker"></view>
+  <view class="family-picker-panel" wx:if="{{showFamilyPicker}}">
+    <view class="picker-header">
+      <text class="picker-title">选择家族</text>
+      <text class="picker-close" bindtap="hideFamilyPicker">✕</text>
+    </view>
+    <view class="picker-list">
+      <view
+        class="picker-item {{item._id === family._id ? 'active' : ''}}"
+        wx:for="{{myFamilies}}"
+        wx:key="_id"
+        data-id="{{item._id}}"
+        bindtap="onSelectFamily"
+      >
+        <view class="picker-item-info">
+          <text class="picker-item-name">{{item.name}}</text>
+          <text class="picker-item-role">{{roleLabels[item.role]}} · {{item.memberCount}}人</text>
+        </view>
+        <view class="picker-item-check" wx:if="{{item._id === family._id}}">✓</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="qrcode-modal" wx:if="{{showQRCodeModal}}" bindtap="hideQRCodeModal">
+    <view class="qrcode-modal-content" catchtap="">
+      <text class="qrcode-modal-title">邀请扫码</text>
+      <image class="qrcode-modal-image" src="{{modalQRCodeUrl}}" mode="aspectFit" wx:if="{{modalQRCodeUrl}}" />
+      <text class="qrcode-modal-code">{{family.inviteCode}}</text>
+      <text class="qrcode-modal-hint">扫一扫加入家族</text>
+      <view class="qrcode-modal-close" bindtap="hideQRCodeModal">关闭</view>
+    </view>
+  </view>
+</view>

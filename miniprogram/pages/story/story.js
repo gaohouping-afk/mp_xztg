@@ -1,3 +1,5 @@
+const cacheManager = require('../../utils/cacheManager.js')
+
 Page({
   data: {
     stories: [],
@@ -10,11 +12,10 @@ Page({
 
   onShow() {
     const app = getApp()
-    const versionKey = 'story_version'
-    const cachedVersion = wx.getStorageSync(versionKey)
+    const { version } = cacheManager.get(cacheManager.keys.stories, app.globalData.familyId)
     const currentVersion = app.globalData.storiesVersion
-    
-    if (currentVersion !== cachedVersion) {
+
+    if (currentVersion !== version) {
       this.loadStories(true)
     }
   },
@@ -37,37 +38,71 @@ Page({
 
   async loadStories(reset = false) {
     if (this.data.loading && !reset) return
-    
-    const cacheKey = 'story_stories'
-    const versionKey = 'story_version'
+
     const app = getApp()
-    
+    const familyId = app.globalData.familyId
+
     if (reset) {
-      const cached = wx.getStorageSync(cacheKey)
-      const cachedVersion = wx.getStorageSync(versionKey)
+      const { data: cached, version } = cacheManager.get(cacheManager.keys.stories, familyId)
       const currentVersion = app.globalData.storiesVersion
-      
-      if (cached && cached.length > 0 && cachedVersion === currentVersion && currentVersion > 0) {
-        this.setData({ stories: cached, loading: false })
-        return
-      } else if (cached && cached.length > 0 && currentVersion === 0) {
+
+      if (cached && cached.length > 0 && version === currentVersion) {
         this.setData({ stories: cached, loading: false })
         return
       }
     }
-    
+
     this.setData({ loading: true })
-    
-    const db = wx.cloud.database()
-    const { data } = await db.collection('stories').orderBy('yearOrder', 'asc').orderBy('createTime', 'desc').get()
-    
+
+    let data = []
+
+    if (familyId) {
+      try {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'stories',
+            familyId: familyId,
+            orderBy: { field: 'yearOrder', order: 'asc' },
+            limit: 100
+          }
+        })
+
+        if (result.result && result.result.success) {
+          data = result.result.data
+          if (app.globalData.storiesVersion > 0) {
+            data = data.sort((a, b) => {
+              if (a.yearOrder !== b.yearOrder) {
+                return a.yearOrder - b.yearOrder
+              }
+              return b.createTime - a.createTime
+            })
+          }
+        }
+      } catch (e) {
+        console.error('loadStories cloud function error:', e)
+      }
+    } else {
+      try {
+        const db = wx.cloud.database()
+        const res = await db.collection('stories')
+          .orderBy('yearOrder', 'asc')
+          .orderBy('createTime', 'desc')
+          .limit(100)
+          .get()
+        data = res.data
+      } catch (e) {
+        console.error('loadStories db error:', e)
+      }
+    }
+
     this.setData({
       stories: data,
       loading: false
     })
-    
-    wx.setStorageSync(versionKey, app.globalData.storiesVersion)
-    wx.setStorageSync(cacheKey, data)
+
+    cacheManager.set(cacheManager.keys.stories, familyId, data, app.globalData.storiesVersion)
   },
 
   onStoryTap(e) {
@@ -86,7 +121,7 @@ Page({
   onDeleteStory(e) {
     const { id } = e.currentTarget.dataset
     const that = this
-    
+
     wx.showModal({
       title: '确认删除',
       content: '确定要删除这篇迁徙故事吗？',
@@ -99,14 +134,21 @@ Page({
   },
 
   async deleteStory(id) {
+    const app = getApp()
     try {
-      const db = wx.cloud.database()
-      await db.collection('stories').doc(id).remove()
+      await wx.cloud.callFunction({
+        name: 'quickstartFunctions',
+        data: {
+          type: 'familyDataRemove',
+          collection: 'stories',
+          familyId: app.globalData.familyId,
+          recordId: id
+        }
+      })
       wx.showToast({ title: '删除成功' })
-      
-      const app = getApp()
+
       app.globalData.storiesVersion = (app.globalData.storiesVersion || 0) + 1
-      
+
       this.loadStories(true)
     } catch (e) {
       wx.showToast({ title: '删除失败', icon: 'none' })

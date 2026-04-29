@@ -1,0 +1,102 @@
+<view class="page">
+  <view class="header-section" wx:if="{{family}}">
+    <view class="family-info">
+      <text class="family-name">{{family.name}}</text>
+      <text class="member-count">共 {{members.length}} 人</text>
+    </view>
+  </view>
+
+  <view class="member-list">
+    <view class="role-section" wx:if="{{ownerList.length > 0}}">
+      <view class="role-title">
+        <text class="role-icon">👑</text>
+        <text class="role-name">族长</text>
+      </view>
+      <view class="member-card" wx:for="{{ownerList}}" wx:key="_id">
+        <view class="member-info">
+          <view class="member-avatar owner">{{item.nickname ? item.nickname : '族'}}</view>
+          <view class="member-detail">
+            <text class="member-name">{{item.nickname || '族长'}}</text>
+            <text class="member-meta">加入于 {{item.joinedAt}}</text>
+          </view>
+        </view>
+        <text class="member-role owner" wx:if="{{item.openid === myOpenid}}">我</text>
+      </view>
+    </view>
+
+    <view class="role-section" wx:if="{{adminList.length > 0}}">
+      <view class="role-title">
+        <text class="role-icon">⚡</text>
+        <text class="role-name">管理员</text>
+        <text class="role-count">{{adminList.length}}人</text>
+      </view>
+      <view class="member-card" wx:for="{{adminList}}" wx:key="_id">
+        <view class="member-info">
+          <view class="member-avatar admin">{{item.nickname ? item.nickname : '管'}}</view>
+          <view class="member-detail">
+            <text class="member-name">{{item.nickname || '管理员'}}</text>
+            <text class="member-meta">加入于 {{item.joinedAt}}</text>
+          </view>
+        </view>
+        <view class="member-actions" wx:if="{{canManage}}">
+          <button class="action-btn" bindtap="onSetRole" data-id="{{item._id}}" data-openid="{{item.openid}}" data-current="admin">设为成员</button>
+          <button class="action-btn danger" bindtap="onRemoveMember" data-id="{{item._id}}" data-openid="{{item.openid}}">移除</button>
+        </view>
+        <text class="member-role admin" wx:if="{{item.openid === myOpenid}}">我</text>
+      </view>
+    </view>
+
+    <view class="role-section" wx:if="{{memberList.length > 0}}">
+      <view class="role-title">
+        <text class="role-icon">👥</text>
+        <text class="role-name">成员</text>
+        <text class="role-count">{{memberList.length}}人</text>
+      </view>
+      <view class="member-card" wx:for="{{memberList}}" wx:key="_id">
+        <view class="member-info">
+          <view class="member-avatar member">{{item.nickname ? item.nickname : '成'}}</view>
+          <view class="member-detail">
+            <text class="member-name">{{item.nickname || '成员'}}</text>
+            <text class="member-meta">加入于 {{item.joinedAt}}</text>
+          </view>
+        </view>
+        <view class="member-actions" wx:if="{{canManage}}">
+          <button class="action-btn" bindtap="onSetRole" data-id="{{item._id}}" data-openid="{{item.openid}}" data-current="member">设为管理员</button>
+          <button class="action-btn danger" bindtap="onRemoveMember" data-id="{{item._id}}" data-openid="{{item.openid}}">移除</button>
+        </view>
+        <text class="member-role member" wx:if="{{item.openid === myOpenid}}">我</text>
+      </view>
+    </view>
+
+    <view class="role-section" wx:if="{{viewerList.length > 0}}">
+      <view class="role-title">
+        <text class="role-icon">👁️</text>
+        <text class="role-name">只读</text>
+        <text class="role-count">{{viewerList.length}}人</text>
+      </view>
+      <view class="member-card" wx:for="{{viewerList}}" wx:key="_id">
+        <view class="member-info">
+          <view class="member-avatar viewer">{{item.nickname ? item.nickname : '阅'}}</view>
+          <view class="member-detail">
+            <text class="member-name">{{item.nickname || '只读'}}</text>
+            <text class="member-meta">加入于 {{item.joinedAt}}</text>
+          </view>
+        </view>
+        <view class="member-actions" wx:if="{{canManage}}">
+          <button class="action-btn" bindtap="onSetRole" data-id="{{item._id}}" data-openid="{{item.openid}}" data-current="viewer">升级为成员</button>
+          <button class="action-btn danger" bindtap="onRemoveMember" data-id="{{item._id}}" data-openid="{{item.openid}}">移除</button>
+        </view>
+        <text class="member-role viewer" wx:if="{{item.openid === myOpenid}}">我</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="loading-view" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+
+  <view class="empty-view" wx:if="{{!loading && members.length === 0}}">
+    <text class="empty-text">暂无成员</text>
+  </view>
+</view>

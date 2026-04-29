@@ -11,14 +11,19 @@
     "pages/grave/grave",
     "pages/graveDetail/graveDetail",
     "pages/graveEdit/graveEdit",
-    "pages/about/about"
+    "pages/about/about",
+    "pages/family/family",
+    "pages/familyCreate/familyCreate",
+    "pages/familySettings/familySettings",
+    "pages/familyMembers/familyMembers"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#8B4513",
     "navigationBarTitleText": "寻公问祖",
-    "navigationBarTextStyle": "white"
+    "navigationBarTextStyle": "white",
+    "enablePullDownRefresh": true
   },
   "requiredPrivateInfos": [
     "getLocation"

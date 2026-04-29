@@ -1,3 +1,5 @@
+const cacheManager = require('../../utils/cacheManager.js')
+
 Page({
   data: {
     id: '',
@@ -27,17 +29,42 @@ Page({
   },
 
   async loadStory(id) {
-    const db = wx.cloud.database()
-    const { data } = await db.collection('stories').doc(id).get()
-    
+    const app = getApp()
+    const familyId = app.globalData.familyId
+    let data = null
+
+    try {
+      if (familyId) {
+        const result = await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataQuery',
+            collection: 'stories',
+            familyId: familyId,
+            limit: 100
+          }
+        })
+        if (result.result && result.result.success && result.result.data) {
+          data = result.result.data.find(s => s._id === id)
+        }
+      } else {
+        const db = wx.cloud.database()
+        const res = await db.collection('stories').doc(id).get()
+        data = res.data
+      }
+    } catch (e) {
+      console.error('loadStory error:', e)
+    }
+
     if (data) {
-      const images = await this.convertImagesToTempUrls(data.images || [])
-      
+      const originalImages = (data.images || []).slice()
+      const images = await this.convertImagesToTempUrls(originalImages)
+
       let yearEra = '1'
       if (data.yearOrder < 0) {
         yearEra = '-1'
       }
-      
+
       this.setData({
         title: data.title || '',
         year: data.year || '',
@@ -47,17 +74,17 @@ Page({
         content: data.content || '',
         relatedMembers: data.relatedMembers || '',
         images: images,
-        imagesToSave: data.images || []
+        imagesToSave: originalImages
       })
     }
   },
 
   async convertImagesToTempUrls(images) {
     if (!images || images.length === 0) return []
-    
+
     const cloudImages = images.filter(img => img && !img.startsWith('http'))
-    if (cloudImages.length === 0) return images
-    
+    if (cloudImages.length === 0) return [...images]
+
     try {
       const res = await wx.cloud.getTempFileURL({ fileList: cloudImages })
       if (res.fileList) {
@@ -67,14 +94,14 @@ Page({
             urlMap[cloudImages[index]] = item.tempFileURL
           }
         })
-        
+
         return images.map(img => urlMap[img] || img)
       }
     } catch (e) {
       console.error('convertImagesToTempUrls error:', e)
     }
-    
-    return images
+
+    return [...images]
   },
 
   onTitleInput(e) {
@@ -111,23 +138,23 @@ Page({
     const res = await wx.chooseImage({ count: 9 - this.data.images.length, sizeType: ['compressed'] })
     if (res.tempFilePaths.length > 0) {
       wx.showLoading({ title: '上传中...' })
-      
+
       const newImages = [...this.data.images]
       const newImagesToSave = [...this.data.imagesToSave]
-      
+
       for (const filePath of res.tempFilePaths) {
         const cloudPath = `stories/${Date.now()}-${Math.random()}.${filePath.split('.').pop()}`
-        
+
         try {
           const uploadRes = await wx.cloud.uploadFile({
             cloudPath,
             filePath
           })
-          
+
           const tempRes = await wx.cloud.getTempFileURL({
             fileList: [uploadRes.fileID]
           })
-          
+
           if (tempRes.fileList && tempRes.fileList[0] && tempRes.fileList[0].tempFileURL) {
             newImages.push(tempRes.fileList[0].tempFileURL)
             newImagesToSave.push(uploadRes.fileID)
@@ -139,7 +166,7 @@ Page({
           console.error('Upload failed:', e)
         }
       }
-      
+
       this.setData({ images: newImages, imagesToSave: newImagesToSave })
       wx.hideLoading()
     }
@@ -150,17 +177,17 @@ Page({
     const newImages = [...this.data.images]
     const newImagesToSave = [...this.data.imagesToSave]
     const removedImage = newImagesToSave[index]
-    
+
     newImages.splice(index, 1)
     newImagesToSave.splice(index, 1)
-    
+
     let newImagesToDelete = [...this.data.imagesToDelete]
     if (removedImage && !removedImage.startsWith('http')) {
       newImagesToDelete.push(removedImage)
     }
-    
-    this.setData({ 
-      images: newImages, 
+
+    this.setData({
+      images: newImages,
       imagesToSave: newImagesToSave,
       imagesToDelete: newImagesToDelete
     })
@@ -168,7 +195,7 @@ Page({
 
   async onSave() {
     const { title, year, yearEra, location, description, content, relatedMembers, imagesToSave, imagesToDelete, id, isEdit, loading } = this.data
-    
+
     if (!title.trim()) {
       wx.showToast({ title: '请输入标题', icon: 'none' })
       return
@@ -178,11 +205,11 @@ Page({
 
     this.setData({ loading: true })
 
+    const app = getApp()
     const yearNum = parseInt(year) || 0
     const yearOrder = yearNum * parseInt(yearEra)
-    
-    const db = wx.cloud.database()
-    const data = {
+
+    const dataToSave = {
       title: title.trim(),
       year,
       yearOrder: yearOrder,
@@ -190,18 +217,33 @@ Page({
       description,
       content,
       relatedMembers,
-      images: imagesToSave,
-      updateTime: db.serverDate()
+      images: imagesToSave
     }
 
     try {
       if (isEdit) {
-        await db.collection('stories').doc(id).update({ data })
+        await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataUpdate',
+            collection: 'stories',
+            familyId: app.globalData.familyId,
+            recordId: id,
+            data: dataToSave
+          }
+        })
       } else {
-        data.createTime = db.serverDate()
-        await db.collection('stories').add({ data })
+        await wx.cloud.callFunction({
+          name: 'quickstartFunctions',
+          data: {
+            type: 'familyDataAdd',
+            collection: 'stories',
+            familyId: app.globalData.familyId,
+            data: dataToSave
+          }
+        })
       }
-      
+
       for (const img of imagesToDelete) {
         try {
           await wx.cloud.deleteFile({ fileList: [img] })
@@ -209,17 +251,17 @@ Page({
           console.error('delete image error:', e)
         }
       }
-      
+
       wx.showToast({ title: '保存成功' })
-      
-      const app = getApp()
+
       app.globalData.storiesVersion = (app.globalData.storiesVersion || 0) + 1
-      wx.setStorageSync('story_version', app.globalData.storiesVersion)
-      
+      cacheManager.invalidate(cacheManager.keys.stories)
+
       setTimeout(() => {
         wx.navigateBack()
       }, 1500)
     } catch (e) {
+      console.error('saveStory error:', e)
       wx.showToast({ title: '保存失败', icon: 'none' })
     } finally {
       this.setData({ loading: false })

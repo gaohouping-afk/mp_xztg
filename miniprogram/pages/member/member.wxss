@@ -2,12 +2,14 @@
   width: 100%;
   min-height: 100vh;
   background-color: #F5F5F5;
+  overflow-x: hidden;
 }
 
 .search-bar {
   background: #FFFFFF;
   padding: 20rpx;
   border-bottom: 1rpx solid #E5E5E5;
+  box-sizing: border-box;
 }
 
 .search-input {
@@ -17,6 +19,7 @@
   border-radius: 32rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
+  box-sizing: border-box;
 }
 
 .filter-btns {
