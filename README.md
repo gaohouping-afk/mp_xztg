@@ -13,11 +13,26 @@
 |:---:|:---:|:---:|
 | ![迁徙故事](4.jpg) | ![墓碑纪念](5.jpg) | ![关于我们](6.jpg) |
 
-一个基于微信云开发的家族族谱管理小程序，支持族谱树展示、成员管理、迁徙故事、墓碑纪念等功能。
+一个基于微信云开发的家族族谱管理小程序，支持多家族管理、族谱树展示、成员管理、迁徙故事、墓碑纪念等功能。
 
 ## 版本更新
 
-### v1.0.1 (当前版本)
+### v1.0.2 (当前版本)
+
+**新增功能：多家族管理**
+- 多家族支持 - 支持创建和管理多个家族，可随时切换
+- 家族切换 - 首页支持快速切换当前查看的家族
+- 家族成员权限 - 成员角色区分（族长、管理员、普通成员）
+- 家族数据隔离 - 各家族数据独立，互不干扰
+- 家族设置 - 支持修改家族名称、简介、公告等信息
+- 邀请加入 - 生成邀请码邀请成员加入家族
+
+**优化内容**
+- 优化了家族模块的数据加载与更新逻辑
+- 修复了编辑故事、墓碑、成员后返回列表不自动刷新的问题
+- 完善了家族切换后数据的正确显示与缓存管理
+
+### v1.0.1
 
 **新增功能：墓碑纪念**
 - 墓碑信息管理 - 添加、编辑、删除墓碑记录
@@ -37,6 +52,7 @@
 
 ## 功能特点
 
+- **多家族管理** - 支持创建、切换多个家族，家族数据完全隔离
 - **族谱树可视化** - 直观展示家族成员关系树状图
 - **成员管理** - 增删改查家族成员信息，支持头像上传
 - **迁徙故事** - 记录和展示家族迁徙历史
@@ -112,6 +128,8 @@ wx.cloud.init({
 首次部署需要初始化数据库集合：
 
 1. 在云开发控制台手动创建以下集合：
+   - `families` - 家族数据
+   - `family_members` - 家族成员关系
    - `members` - 成员数据
    - `stories` - 迁徙故事
    - `graves` - 墓碑数据
@@ -120,11 +138,41 @@ wx.cloud.init({
 
 ## 数据结构
 
+### families 集合
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| _id | string | 自动生成唯一ID |
+| name | string | 家族名称 |
+| description | string | 家族简介 |
+| announcement | string | 家族公告 |
+| ownerId | string | 族长openid |
+| memberCount | number | 成员数量 |
+| inviteCode | string | 邀请码 |
+| membersVersion | number | 成员数据版本号 |
+| gravesVersion | number | 墓碑数据版本号 |
+| storiesVersion | number | 故事数据版本号 |
+| createTime | date | 创建时间 |
+| updateTime | date | 更新时间 |
+
+### family_members 集合
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| _id | string | 自动生成唯一ID |
+| familyId | string | 家族ID |
+| openid | string | 成员openid |
+| nickname | string | 微信昵称 |
+| avatar | string | 头像URL |
+| role | string | 角色（owner/admin/member/viewer） |
+| joinTime | date | 加入时间 |
+
 ### members 集合
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | _id | string | 自动生成唯一ID |
+| familyId | string | 所属家族ID |
 | name | string | 姓名 |
 | gender | string | 性别（男/女） |
 | generation | number | 代数 |
@@ -144,6 +192,7 @@ wx.cloud.init({
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | _id | string | 自动生成唯一ID |
+| familyId | string | 所属家族ID |
 | title | string | 标题 |
 | year | string | 年份 |
 | location | string | 地点 |
@@ -159,6 +208,7 @@ wx.cloud.init({
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | _id | string | 自动生成唯一ID |
+| familyId | string | 所属家族ID |
 | memberId | string | 关联的成员ID |
 | graveType | string | 墓碑类型（ancestor/clothing/memorial/tablet/other） |
 | location | string | 墓碑位置描述 |
